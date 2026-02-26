@@ -20,9 +20,9 @@ def is_docker_environment():
         return False
 
 def get_git_version():
-    """Git tag'larından versiyon bilgisini al"""
+    """Get version info from git tags"""
     try:
-        # Git tag'larını kontrol et
+        # Check git tags
         result = subprocess.run(
             ['git', 'describe', '--tags', '--abbrev=0'], 
             capture_output=True, 
@@ -33,7 +33,7 @@ def get_git_version():
         
         if result.returncode == 0 and result.stdout.strip():
             tag = result.stdout.strip()
-            # v prefix'ini kaldır
+            # Remove v prefix
             if tag.startswith('v'):
                 tag = tag[1:]
             return tag
@@ -44,7 +44,7 @@ def get_git_version():
     return None
 
 def get_git_commit_count():
-    """Git commit sayısını al"""
+    """Get git commit count"""
     try:
         result = subprocess.run(
             ['git', 'rev-list', '--count', 'HEAD'], 
@@ -63,7 +63,7 @@ def get_git_commit_count():
     return None
 
 def get_git_commit_hash():
-    """Git commit hash'ini al (kısa form)"""
+    """Get git commit hash (short form)"""
     try:
         result = subprocess.run(
             ['git', 'rev-parse', '--short', 'HEAD'], 
@@ -82,7 +82,7 @@ def get_git_commit_hash():
     return None
 
 def is_git_dirty():
-    """Git working directory'sinde değişiklik var mı?"""
+    """Check if there are changes in the git working directory"""
     try:
         result = subprocess.run(
             ['git', 'diff-index', '--quiet', 'HEAD', '--'], 
@@ -100,9 +100,9 @@ def is_git_dirty():
     return False
 
 def get_docker_image_version():
-    """Docker image'den versiyon bilgisini al"""
+    """Get version info from Docker image"""
     try:
-        # Docker image label'ından versiyon al
+        # Get version from Docker image label
         result = subprocess.run([
             'docker', 'inspect', '--format', '{{index .Config.Labels "version"}}', 
             'fxerkan/my-network-scanner:latest'
@@ -111,7 +111,7 @@ def get_docker_image_version():
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
             
-        # Alternatif olarak built-in label'ı dene
+        # Alternatively, try built-in label
         result = subprocess.run([
             'docker', 'inspect', '--format', '{{index .Config.Labels "org.opencontainers.image.version"}}', 
             'fxerkan/my-network-scanner:latest'
@@ -126,48 +126,48 @@ def get_docker_image_version():
     return None
 
 def get_version():
-    """Ana versiyon fonksiyonu - dinamik versiyon döndürür"""
-    # Docker ortamında çalışıyorsa ve git yoksa
+    """Main version function - returns dynamic version"""
+    # If running in Docker and git is not available
     if is_docker_environment():
-        # Önce Docker image'den versiyon almaya çalış
+        # Try to get version from Docker image first
         docker_version = get_docker_image_version()
         if docker_version:
             return docker_version
             
-        # Git yoksa fallback kullan
+        # If git is not available, use fallback
         if not os.path.exists('.git'):
             return FALLBACK_VERSION
     
     git_version = get_git_version()
     
     if git_version:
-        # Git tag'i varsa onu kullan
+        # If git tag exists, use it
         version = git_version
         
-        # Docker ortamında değilse veya git dirty değilse commit hash ekleme
+        # If not in Docker or git is not dirty, add commit hash
         if not is_docker_environment():
             commit_hash = get_git_commit_hash()
             if commit_hash:
                 version += f"-{commit_hash}"
                 
-            # Eğer dirty working directory varsa + ekle
+            # If working directory is dirty, add +
             if is_git_dirty():
                 version += "+"
             
         return version
     else:
-        # Git tag'i yoksa commit sayısına göre minor version oluştur
+        # If no git tag, create minor version based on commit count
         commit_count = get_git_commit_count()
         
         if commit_count is not None:
-            # Commit sayısına göre otomatik versiyon oluştur
+            # Automatically create version based on commit count
             major = 1
             minor = 0
-            patch = min(commit_count, 999)  # Maksimum 999'da sınırla
+            patch = min(commit_count, 999)  # Limit to max 999
             
             version = f"{major}.{minor}.{patch}"
             
-            # Docker ortamında değilse commit hash ekle
+            # If not in Docker, add commit hash
             if not is_docker_environment():
                 commit_hash = get_git_commit_hash()
                 if commit_hash:
@@ -178,11 +178,11 @@ def get_version():
                 
             return version
         else:
-            # Git hiç kullanılamıyorsa fallback
+            # If git is not available at all, use fallback
             return FALLBACK_VERSION
 
 def get_version_info():
-    """Detaylı versiyon bilgisi döndürür"""
+    """Return detailed version information"""
     version = get_version()
     commit_hash = get_git_commit_hash()
     commit_count = get_git_commit_count()

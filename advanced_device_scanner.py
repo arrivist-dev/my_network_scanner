@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Gelişmiş Cihaz Tarayıcı - nmap haricinde ek bilgi toplama yöntemleri
 Advanced Device Scanner - Additional information gathering methods beyond nmap
 """
 
@@ -29,7 +28,7 @@ class AdvancedDeviceScanner:
         self.system_os = platform.system()
         
     def get_enhanced_device_info(self, ip, mac, hostname, vendor, progress_callback=None):
-        """Gelişmiş cihaz bilgileri toplama"""
+        """Collect enhanced device information"""
         enhanced_info = {
             'basic_info': {
                 'ip': ip,
@@ -44,68 +43,68 @@ class AdvancedDeviceScanner:
             'additional_info': {}
         }
         
-        # Detaylı logging için helper function
-        def log_detailed_operation(operation, status="başlatılıyor", details=""):
+        # Helper function for detailed logging
+        def log_detailed_operation(operation, status="starting", details=""):
             if progress_callback:
-                message = f"{ip} -    🔬 {operation}: {status}"
+                message = f"{ip} -    🔬 {operation}: {status}"
                 if details:
                     message += f" ({details})"
                 progress_callback(message)
         
-        # Network bilgileri
-        log_detailed_operation("🌐 Network Analizi", "başlatılıyor", "subnet, gateway, interface")
+        # Network information
+        log_detailed_operation("🌐 Network Analysis", "starting", "subnet, gateway, interface")
         enhanced_info['network_info'] = self.get_network_info(ip)
-        log_detailed_operation("🌐 Network Analizi", "tamamlandı")
+        log_detailed_operation("🌐 Network Analysis", "completed")
         
-        # DNS bilgileri
-        log_detailed_operation("🔍 DNS Analizi", "başlatılıyor", "reverse DNS, TXT records")
+        # DNS information
+        log_detailed_operation("🔍 DNS Analysis", "starting", "reverse DNS, TXT records")
         enhanced_info['dns_info'] = self.get_dns_info(ip, hostname)
-        log_detailed_operation("🔍 DNS Analizi", "tamamlandı")
+        log_detailed_operation("🔍 DNS Analysis", "completed")
         
-        # SSH bilgileri (port 22 açıksa)
-        log_detailed_operation("🔐 SSH Banner Grab", "başlatılıyor")
+        # SSH information (if port 22 is open)
+        log_detailed_operation("🔐 SSH Banner Grab", "starting")
         enhanced_info['ssh_info'] = self.get_ssh_info(ip)
-        log_detailed_operation("🔐 SSH Banner Grab", "tamamlandı")
+        log_detailed_operation("🔐 SSH Banner Grab", "completed")
         
-        # HTTP/HTTPS bilgileri
-        log_detailed_operation("🌍 Web Analizi", "başlatılıyor", "HTTP/HTTPS, headers")
+        # HTTP/HTTPS information
+        log_detailed_operation("🌍 Web Analysis", "starting", "HTTP/HTTPS, headers")
         enhanced_info['web_info'] = self.get_web_info(ip)
-        log_detailed_operation("🌍 Web Analizi", "tamamlandı")
+        log_detailed_operation("🌍 Web Analysis", "completed")
         
-        # SNMP bilgileri
-        log_detailed_operation("📡 SNMP Tarama", "başlatılıyor", "system info")
+        # SNMP information
+        log_detailed_operation("📡 SNMP Scan", "starting", "system info")
         enhanced_info['snmp_info'] = self.get_snmp_info(ip)
-        log_detailed_operation("📡 SNMP Tarama", "tamamlandı")
+        log_detailed_operation("📡 SNMP Scan", "completed")
         
-        # SMB/NetBIOS bilgileri
-        log_detailed_operation("📁 SMB/NetBIOS Tarama", "başlatılıyor", "shares, workgroup")
+        # SMB/NetBIOS information
+        log_detailed_operation("📁 SMB/NetBIOS Scan", "starting", "shares, workgroup")
         enhanced_info['smb_info'] = self.get_smb_info(ip)
-        log_detailed_operation("📁 SMB/NetBIOS Tarama", "tamamlandı")
+        log_detailed_operation("📁 SMB/NetBIOS Scan", "completed")
         
-        # UPnP bilgileri
-        log_detailed_operation("🔌 UPnP Keşfi", "başlatılıyor")
+        # UPnP information
+        log_detailed_operation("🔌 UPnP Discovery", "starting")
         enhanced_info['upnp_info'] = self.get_upnp_info(ip)
-        log_detailed_operation("🔌 UPnP Keşfi", "tamamlandı")
+        log_detailed_operation("🔌 UPnP Discovery", "completed")
         
-        # ARP table bilgileri
-        log_detailed_operation("🗺 ARP Analizi", "başlatılıyor")
+        # ARP table information
+        log_detailed_operation("🗺 ARP Analysis", "starting")
         enhanced_info['arp_info'] = self.get_arp_info(ip, mac)
-        log_detailed_operation("🗺 ARP Analizi", "tamamlandı")
+        log_detailed_operation("🗺 ARP Analysis", "completed")
         
-        # Ping analizi
-        log_detailed_operation("🎧 Ping Analizi", "başlatılıyor", "latency, packet loss")
+        # Ping analysis
+        log_detailed_operation("🎧 Ping Analysis", "starting", "latency, packet loss")
         enhanced_info['ping_analysis'] = self.get_ping_analysis(ip)
-        log_detailed_operation("🎧 Ping Analizi", "tamamlandı")
+        log_detailed_operation("🎧 Ping Analysis", "completed")
         
-        # Traceroute analizi
-        log_detailed_operation("🗺 Traceroute Analizi", "başlatılıyor")
+        # Traceroute analysis
+        log_detailed_operation("🗺 Traceroute Analysis", "starting")
         enhanced_info['traceroute_analysis'] = self.get_traceroute_analysis(ip)
-        log_detailed_operation("🗺 Traceroute Analizi", "tamamlandı")
+        log_detailed_operation("🗺 Traceroute Analysis", "completed")
         
         return enhanced_info
     
     def get_network_info(self, ip):
-        """Ağ bilgileri toplama"""
+        """Collect network information"""
         network_info = {}
         
         try:
@@ -116,13 +115,13 @@ class AdvancedDeviceScanner:
             except:
                 network_info['reverse_dns'] = None
             
-            # Subnet bilgisi
+            # Subnet information
             network_info['subnet'] = self.get_subnet_info(ip)
             
-            # Gateway bilgisi
+            # Gateway information
             network_info['gateway'] = self.get_gateway_info(ip)
             
-            # Interface bilgisi
+            # Interface information
             network_info['interface'] = self.get_interface_info(ip)
             
         except Exception as e:
@@ -131,36 +130,36 @@ class AdvancedDeviceScanner:
         return network_info
     
     def get_dns_info(self, ip, hostname):
-        """DNS bilgileri toplama"""
+        """Collect DNS information"""
         dns_info = {}
         
         try:
-            # DNS kayıtları
+            # DNS records
             if hostname:
                 dns_info['hostname'] = hostname
                 
-                # A kaydı
+                # A record
                 try:
                     result = dns.resolver.resolve(hostname, 'A')
                     dns_info['a_records'] = [str(rdata) for rdata in result]
                 except:
                     dns_info['a_records'] = []
                 
-                # AAAA kaydı
+                # AAAA record
                 try:
                     result = dns.resolver.resolve(hostname, 'AAAA')
                     dns_info['aaaa_records'] = [str(rdata) for rdata in result]
                 except:
                     dns_info['aaaa_records'] = []
                 
-                # MX kaydı
+                # MX record
                 try:
                     result = dns.resolver.resolve(hostname, 'MX')
                     dns_info['mx_records'] = [str(rdata) for rdata in result]
                 except:
                     dns_info['mx_records'] = []
                 
-                # TXT kaydı
+                # TXT record
                 try:
                     result = dns.resolver.resolve(hostname, 'TXT')
                     dns_info['txt_records'] = [str(rdata) for rdata in result]
@@ -181,7 +180,7 @@ class AdvancedDeviceScanner:
         return dns_info
     
     def get_ssh_info(self, ip):
-        """SSH bilgileri toplama"""
+        """Collect SSH information"""
         ssh_info = {}
         
         try:
@@ -195,11 +194,11 @@ class AdvancedDeviceScanner:
                     banner = sock.recv(1024).decode('utf-8').strip()
                     ssh_info['banner'] = banner
                     
-                    # SSH versiyonu
+                    # SSH version
                     if 'SSH-' in banner:
                         ssh_info['version'] = banner.split('\n')[0]
                     
-                    # OpenSSH versiyonu
+                    # OpenSSH version
                     if 'OpenSSH' in banner:
                         match = re.search(r'OpenSSH_(\d+\.\d+)', banner)
                         if match:
@@ -218,7 +217,7 @@ class AdvancedDeviceScanner:
         return ssh_info
     
     def get_web_info(self, ip):
-        """HTTP/HTTPS bilgileri toplama"""
+        """Collect HTTP/HTTPS information"""
         web_info = {'http': {}, 'https': {}}
         
         # HTTP
@@ -248,7 +247,7 @@ class AdvancedDeviceScanner:
         return web_info
     
     def get_snmp_info(self, ip):
-        """SNMP bilgileri toplama"""
+        """Collect SNMP information"""
         snmp_info = {}
         
         try:
@@ -288,7 +287,7 @@ class AdvancedDeviceScanner:
         return snmp_info
     
     def get_smb_info(self, ip):
-        """SMB/NetBIOS bilgileri toplama"""
+        """Collect SMB/NetBIOS information"""
         smb_info = {}
         
         try:
@@ -325,7 +324,7 @@ class AdvancedDeviceScanner:
         return smb_info
     
     def get_upnp_info(self, ip):
-        """UPnP bilgileri toplama"""
+        """Collect UPnP information"""
         upnp_info = {}
         
         try:
@@ -358,11 +357,11 @@ class AdvancedDeviceScanner:
         return upnp_info
     
     def get_arp_info(self, ip, mac):
-        """ARP table bilgileri"""
+        """Collect ARP table information"""
         arp_info = {}
         
         try:
-            # ARP table'dan bilgi al
+            # Get information from ARP table
             if self.system_os == 'Windows':
                 cmd = 'arp -a'
             else:
@@ -379,7 +378,7 @@ class AdvancedDeviceScanner:
         return arp_info
     
     def get_ping_analysis(self, ip):
-        """Detaylı ping analizi"""
+        """Detailed ping analysis"""
         ping_info = {}
         
         try:
@@ -402,7 +401,7 @@ class AdvancedDeviceScanner:
         return ping_info
     
     def get_traceroute_analysis(self, ip):
-        """Detaylı traceroute analizi"""
+        """Detailed traceroute analysis"""
         traceroute_info = {}
         
         try:
@@ -424,7 +423,7 @@ class AdvancedDeviceScanner:
         return traceroute_info
     
     def get_wmi_info(self, ip):
-        """WMI bilgileri (Windows için)"""
+        """WMI information (for Windows)"""
         wmi_info = {}
         
         try:
@@ -455,7 +454,7 @@ class AdvancedDeviceScanner:
         return wmi_info
     
     def get_ldap_info(self, ip):
-        """LDAP bilgileri toplama"""
+        """Collect LDAP information"""
         ldap_info = {}
         
         try:
@@ -474,7 +473,7 @@ class AdvancedDeviceScanner:
     
     # Helper methods
     def extract_title(self, html):
-        """HTML'den title çıkarma"""
+        """Extract title from HTML"""
         try:
             match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE)
             return match.group(1) if match else ''
@@ -482,7 +481,7 @@ class AdvancedDeviceScanner:
             return ''
     
     def parse_netbios_output(self, output):
-        """NetBIOS çıktısını parse etme"""
+        """Parse NetBIOS output"""
         try:
             lines = output.split('\n')
             for line in lines:
@@ -493,7 +492,7 @@ class AdvancedDeviceScanner:
         return None
     
     def parse_smb_shares(self, output):
-        """SMB shares parse etme"""
+        """Parse SMB shares"""
         shares = []
         try:
             lines = output.split('\n')
@@ -505,7 +504,7 @@ class AdvancedDeviceScanner:
         return shares
     
     def parse_enum4linux_output(self, output):
-        """enum4linux çıktısını parse etme"""
+        """Parse enum4linux output"""
         parsed = {}
         try:
             # Domain info
@@ -525,7 +524,7 @@ class AdvancedDeviceScanner:
         return parsed
     
     def extract_upnp_location(self, response):
-        """UPnP location URL çıkarma"""
+        """Extract UPnP location URL"""
         try:
             match = re.search(r'LOCATION: (.+)', response, re.IGNORECASE)
             return match.group(1).strip() if match else ''
@@ -533,7 +532,7 @@ class AdvancedDeviceScanner:
             return ''
     
     def parse_arp_table(self, output, target_ip, target_mac):
-        """ARP table parse etme"""
+        """Parse ARP table"""
         parsed = {}
         try:
             lines = output.split('\n')
@@ -546,7 +545,7 @@ class AdvancedDeviceScanner:
         return parsed
     
     def parse_ping_statistics(self, output):
-        """Ping istatistiklerini parse etme"""
+        """Parse ping statistics"""
         stats = {}
         try:
             # Packet loss
@@ -568,7 +567,7 @@ class AdvancedDeviceScanner:
         return stats
     
     def extract_ttl(self, output):
-        """TTL değerini çıkarma"""
+        """Extract TTL value"""
         try:
             match = re.search(r'ttl=(\d+)', output, re.IGNORECASE)
             return int(match.group(1)) if match else None
@@ -576,7 +575,7 @@ class AdvancedDeviceScanner:
             return None
     
     def estimate_os_from_ttl(self, ttl):
-        """TTL'den işletim sistemi tahmini"""
+        """Estimate operating system from TTL"""
         if ttl is None:
             return 'Unknown'
         
@@ -590,7 +589,7 @@ class AdvancedDeviceScanner:
             return 'Unknown'
     
     def parse_traceroute_hops(self, output):
-        """Traceroute hop'larını parse etme"""
+        """Parse traceroute hops"""
         hops = []
         try:
             lines = output.split('\n')
@@ -602,7 +601,7 @@ class AdvancedDeviceScanner:
         return hops
     
     def analyze_network_path(self, output):
-        """Network path analizi"""
+        """Analyze network path"""
         analysis = {}
         try:
             hops = self.parse_traceroute_hops(output)
@@ -613,7 +612,7 @@ class AdvancedDeviceScanner:
         return analysis
     
     def parse_ldap_domain_info(self, output):
-        """LDAP domain bilgileri parse etme"""
+        """Parse LDAP domain information"""
         domain_info = {}
         try:
             if 'defaultNamingContext:' in output:
@@ -625,9 +624,9 @@ class AdvancedDeviceScanner:
         return domain_info
     
     def get_subnet_info(self, ip):
-        """Subnet bilgilerini alma"""
+        """Get subnet information"""
         try:
-            # Local network interfaces kontrol et
+            # Check local network interfaces
             interfaces = get_network_interfaces()
             for interface_info in interfaces:
                 network = ip_network(f"{interface_info['ip']}/{interface_info['netmask']}", strict=False)
@@ -642,7 +641,7 @@ class AdvancedDeviceScanner:
         return {}
     
     def get_gateway_info(self, ip):
-        """Gateway bilgilerini alma"""
+        """Get gateway information"""
         try:
             return get_default_gateway()
         except:
@@ -650,7 +649,7 @@ class AdvancedDeviceScanner:
         return None
     
     def get_interface_info(self, ip):
-        """Interface bilgilerini alma"""
+        """Get interface information"""
         try:
             interfaces = get_network_interfaces()
             for interface_info in interfaces:

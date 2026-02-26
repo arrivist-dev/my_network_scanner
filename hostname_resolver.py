@@ -255,13 +255,13 @@ class AdvancedHostnameResolver:
         return None
     
     def _resolve_rdn_analysis(self, ip_address_str):
-        """Relative Distinguished Name (RDN) analizi"""
+        """Relative Distinguished Name (RDN) analysis"""
         try:
-            # DNS kayıtlarından RDN bilgisi çıkarma
+            # Extract RDN info from DNS records
             import dns.resolver
             import dns.reversename
             
-            # PTR kaydı al
+            # Get PTR record
             reverse_name = dns.reversename.from_address(ip_address_str)
             result = dns.resolver.resolve(reverse_name, 'PTR')
             
@@ -288,16 +288,16 @@ class AdvancedHostnameResolver:
         return None
     
     def _lazy_text_hostname_analysis(self, ip_address_str):
-        """Lazy text algoritması ile hostname analizi"""
+        """Hostname analysis with lazy text algorithm"""
         try:
-            # Çeşitli kaynaklardan metin toplama
+            # Collect text from various sources
             text_sources = []
             
-            # HTTP başlıkları
+            # HTTP headers
             try:
                 import requests
                 response = requests.get(f'http://{ip_address_str}', timeout=3)
-                text_sources.append(response.text[:1000])  # İlk 1000 karakter
+                text_sources.append(response.text[:1000])  # First 1000 characters
                 
                 # Server header
                 server_header = response.headers.get('Server', '')
@@ -306,7 +306,7 @@ class AdvancedHostnameResolver:
             except Exception:
                 pass
             
-            # HTTPS sertifikası
+            # HTTPS certificate
             try:
                 import ssl
                 context = ssl.create_default_context()
@@ -339,14 +339,14 @@ class AdvancedHostnameResolver:
                 except Exception:
                     pass
             
-            # Metinlerden hostname çıkarma
+            # Extract hostnames from text
             hostnames = []
             for text in text_sources:
                 extracted_hostnames = self._extract_hostnames_from_text(text, ip_address_str)
                 hostnames.extend(extracted_hostnames)
             
             if hostnames:
-                # En iyi hostname'i seç (en sık geçen)
+                # Choose the best hostname (most frequent)
                 hostname_counts = {}
                 for hostname in hostnames:
                     hostname_counts[hostname] = hostname_counts.get(hostname, 0) + 1
@@ -366,18 +366,18 @@ class AdvancedHostnameResolver:
         return None
     
     def _analyze_rdn_structure(self, dn_string):
-        """RDN yapısını analiz etme"""
+        """Analyze RDN structure"""
         rdn_info = {}
         
         try:
-            # DNS name'i parse et
+            # Parse DNS name
             parts = dn_string.lower().rstrip('.').split('.')
             
             if len(parts) >= 2:
                 rdn_info['hostname'] = parts[0]
                 rdn_info['domain'] = '.'.join(parts[1:])
                 
-                # Özel pattern'ları ara
+                # Search for special patterns
                 patterns = {
                     'organization': [r'corp', r'company', r'inc', r'ltd', r'llc'],
                     'location': [r'ny', r'ca', r'tx', r'fl', r'office', r'branch'],
@@ -397,11 +397,11 @@ class AdvancedHostnameResolver:
         return rdn_info
     
     def _extract_hostnames_from_text(self, text, ip_address_str):
-        """Metinden hostname'leri çıkarma"""
+        """Extract hostnames from text"""
         hostnames = []
         
         try:
-            # Hostname pattern'leri
+            # Hostname patterns
             patterns = [
                 r'hostname[:\s]+([a-zA-Z0-9\-\.]+)',
                 r'computer[:\s]+([a-zA-Z0-9\-\.]+)',
@@ -410,7 +410,7 @@ class AdvancedHostnameResolver:
                 r'name[:\s]+([a-zA-Z0-9\-\.]+)',
                 r'([a-zA-Z0-9\-]+\.local)',
                 r'([a-zA-Z0-9\-]+\.lan)',
-                r'([a-zA-Z0-9\-]{3,20})',  # Genel hostname pattern
+                r'([a-zA-Z0-9\-]{3,20})',  # General hostname pattern
             ]
             
             text_lower = text.lower()
@@ -425,32 +425,32 @@ class AdvancedHostnameResolver:
         return hostnames
     
     def _is_valid_hostname(self, hostname, ip_address_str):
-        """Hostname'in geçerli olup olmadığını kontrol et"""
+        """Check if the hostname is valid"""
         try:
-            # Çok kısa veya çok uzun
+            # Too short or too long
             if len(hostname) < 3 or len(hostname) > 63:
                 return False
             
-            # Sadece rakam
+            # Only digits
             if hostname.isdigit():
                 return False
             
-            # IP adresi formatı
+            # IP address format
             try:
                 ip_address(hostname)
-                return False  # Bu bir IP adresi
+                return False  # This is an IP address
             except Exception:
                 pass
             
-            # Geçersiz karakterler
+            # Invalid characters
             if not re.match(r'^[a-zA-Z0-9\-\.]+$', hostname):
                 return False
             
-            # Başlangıç ve bitiş tire
+            # Starts or ends with a hyphen
             if hostname.startswith('-') or hostname.endswith('-'):
                 return False
             
-            # Aynı IP adresi
+            # Same as IP address
             if hostname == ip_address_str:
                 return False
             
@@ -459,7 +459,7 @@ class AdvancedHostnameResolver:
             return False
     
     def _merge_hostname_result(self, hostname_info, result, method_name):
-        """Hostname sonuçlarını birleştirme"""
+        """Merge hostname results"""
         if not result:
             return
         
@@ -472,7 +472,7 @@ class AdvancedHostnameResolver:
                 'details': result
             })
         
-        # Özel alanları birleştir
+        # Merge special fields
         if method_name == 'netbios' and result.get('netbios_name'):
             hostname_info['netbios_name'] = result['netbios_name']
         
@@ -482,7 +482,7 @@ class AdvancedHostnameResolver:
         if method_name.startswith('mdns') and result.get('hostname'):
             hostname_info['mdns_info'][method_name] = result
         
-        # Domain bilgisi
+        # Domain info
         domain = result.get('domain')
         if domain:
             hostname_info['domain_info'][method_name] = domain
@@ -492,27 +492,27 @@ class AdvancedHostnameResolver:
         hostname_info['alternative_names'].extend(alt_names)
     
     def _select_best_hostname(self, hostname_info):
-        """En iyi hostname'i seçme"""
+        """Select the best hostname"""
         if not hostname_info['hostnames']:
             return None
         
-        # Güven skorlarına göre sırala
+        # Sort by confidence scores
         sorted_hostnames = sorted(
             hostname_info['hostnames'], 
             key=lambda x: x['confidence'], 
             reverse=True
         )
         
-        # En yüksek güven skoru
+        # Highest confidence score
         best_hostname = sorted_hostnames[0]['hostname']
         
-        # Aynı hostname'in farklı yöntemlerle bulunması
+        # Same hostname found by different methods
         hostname_counts = {}
         for item in hostname_info['hostnames']:
             hostname = item['hostname']
             hostname_counts[hostname] = hostname_counts.get(hostname, 0) + 1
         
-        # En çok tekrar eden hostname varsa onu tercih et
+        # Prefer the most frequent hostname if it exists
         most_common = max(hostname_counts, key=hostname_counts.get)
         if hostname_counts[most_common] > 1:
             return most_common
@@ -520,7 +520,7 @@ class AdvancedHostnameResolver:
         return best_hostname
     
     def _is_cache_valid(self, cache_key):
-        """Cache'in geçerli olup olmadığını kontrol et"""
+        """Check if the cache is valid"""
         if cache_key not in self.cache:
             return False
         
@@ -528,7 +528,7 @@ class AdvancedHostnameResolver:
         return (time.time() - cache_time) < self.cache_timeout
     
     def _cache_result(self, cache_key, data):
-        """Sonucu cache'e kaydet"""
+        """Save the result to cache"""
         self.cache[cache_key] = {
             'data': data,
             'timestamp': time.time()
@@ -536,7 +536,7 @@ class AdvancedHostnameResolver:
     
     # Parser methods
     def _parse_nslookup_output(self, output):
-        """nslookup çıktısını parse etme"""
+        """Parse nslookup output"""
         try:
             lines = output.split('\n')
             for line in lines:
@@ -549,7 +549,7 @@ class AdvancedHostnameResolver:
         return None
     
     def _parse_nmblookup_output(self, output):
-        """nmblookup çıktısını parse etme"""
+        """Parse nmblookup output"""
         try:
             info = {}
             lines = output.split('\n')
@@ -572,7 +572,7 @@ class AdvancedHostnameResolver:
         return None
     
     def _parse_avahi_output(self, output):
-        """avahi-resolve çıktısını parse etme"""
+        """Parse avahi-resolve output"""
         try:
             lines = output.split('\n')
             for line in lines:
@@ -585,7 +585,7 @@ class AdvancedHostnameResolver:
         return None
     
     def _parse_dns_sd_output(self, output):
-        """dns-sd çıktısını parse etme"""
+        """Parse dns-sd output"""
         try:
             lines = output.split('\n')
             for line in lines:
@@ -598,7 +598,7 @@ class AdvancedHostnameResolver:
         return None
     
     def _parse_smbclient_output(self, output):
-        """smbclient çıktısını parse etme"""
+        """Parse smbclient output"""
         try:
             info = {}
             lines = output.split('\n')
@@ -623,7 +623,7 @@ class AdvancedHostnameResolver:
         return None
     
     def _parse_snmp_output(self, output):
-        """SNMP çıktısını parse etme"""
+        """Parse SNMP output"""
         try:
             match = re.search(r'STRING:\s*(.+)', output)
             if match:

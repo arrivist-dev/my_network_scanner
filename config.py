@@ -190,7 +190,7 @@ class ConfigManager:
             # Toshiba
             '000039': 'Toshiba', '001560': 'Toshiba', '005004': 'Toshiba', '00608C': 'Toshiba',
             
-            # Fujitsu (bazı Toshiba ile overlap olabilir, farklı OUI'ler kullanıyoruz)
+            # Fujitsu (some overlap with Toshiba, using different OUIs)
             '001B38': 'Fujitsu', '002268': 'Fujitsu',
             
             # S-Link
@@ -203,7 +203,7 @@ class ConfigManager:
         self.load_config()
     
     def load_config(self):
-        """Konfigürasyonu dosyadan yükle"""
+        """Load configuration from file"""
         try:
             if os.path.exists(self.config_file):
                 with open(self.config_file, 'r', encoding='utf-8') as f:
@@ -212,20 +212,20 @@ class ConfigManager:
                 self.config = self.default_config.copy()
                 self.save_config()
         except Exception as e:
-            print(f"Config yükleme hatası: {e}")
+            print(f"Config load error: {e}")
             self.config = self.default_config.copy()
     
     def save_config(self):
-        """Konfigürasyonu dosyaya kaydet"""
+        """Save configuration to file"""
         try:
             os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(self.config, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Config kaydetme hatası: {e}")
+            print(f"Config save error: {e}")
     
     def load_oui_database(self):
-        """OUI veritabanını yükle"""
+        """Load OUI database"""
         try:
             if os.path.exists(self.oui_file):
                 with open(self.oui_file, 'r', encoding='utf-8') as f:
@@ -234,20 +234,20 @@ class ConfigManager:
                 self.save_oui_database(self.default_oui_database)
                 return self.default_oui_database.copy()
         except Exception as e:
-            print(f"OUI database yükleme hatası: {e}")
+            print(f"OUI database load error: {e}")
             return self.default_oui_database.copy()
     
     def save_oui_database(self, oui_data):
-        """OUI veritabanını kaydet"""
+        """Save OUI database"""
         try:
             os.makedirs(os.path.dirname(self.oui_file), exist_ok=True)
             with open(self.oui_file, 'w', encoding='utf-8') as f:
                 json.dump(oui_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"OUI database kaydetme hatası: {e}")
+            print(f"OUI database save error: {e}")
     
     def load_device_types(self):
-        """Cihaz tiplerini yükle"""
+        """Load device types"""
         try:
             if os.path.exists(self.device_types_file):
                 with open(self.device_types_file, 'r', encoding='utf-8') as f:
@@ -256,20 +256,20 @@ class ConfigManager:
                 self.save_device_types(self.default_device_types)
                 return self.default_device_types.copy()
         except Exception as e:
-            print(f"Device types yükleme hatası: {e}")
+            print(f"Device types load error: {e}")
             return self.default_device_types.copy()
     
     def save_device_types(self, device_types):
-        """Cihaz tiplerini kaydet"""
+        """Save device types"""
         try:
             os.makedirs(os.path.dirname(self.device_types_file), exist_ok=True)
             with open(self.device_types_file, 'w', encoding='utf-8') as f:
                 json.dump(device_types, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Device types kaydetme hatası: {e}")
+            print(f"Device types save error: {e}")
     
     def add_scan_history(self, scan_data):
-        """Tarama geçmişine kayıt ekle"""
+        """Add entry to scan history"""
         try:
             history = self.load_scan_history()
             history.append({
@@ -282,7 +282,7 @@ class ConfigManager:
                 'vendors': scan_data.get('vendors', {})
             })
             
-            # Son 100 kayıtı tut
+            # Keep last 100 records
             if len(history) > 100:
                 history = history[-100:]
             
@@ -290,28 +290,28 @@ class ConfigManager:
             with open(self.scan_history_file, 'w', encoding='utf-8') as f:
                 json.dump(history, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Scan history kaydetme hatası: {e}")
+            print(f"Scan history save error: {e}")
     
     def load_scan_history(self):
-        """Tarama geçmişini yükle"""
+        """Load scan history"""
         try:
             if os.path.exists(self.scan_history_file):
                 with open(self.scan_history_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
             return []
         except Exception as e:
-            print(f"Scan history yükleme hatası: {e}")
+            print(f"Scan history load error: {e}")
             return []
     
     def get_setting(self, section, key, default=None):
-        """Belirli bir ayarı al"""
+        """Get a specific setting"""
         try:
             return self.config.get(section, {}).get(key, default)
         except Exception:
             return default
     
     def set_setting(self, section, key, value):
-        """Belirli bir ayarı güncelle"""
+        """Update a specific setting"""
         try:
             if section not in self.config:
                 self.config[section] = {}
@@ -319,16 +319,16 @@ class ConfigManager:
             self.save_config()
             return True
         except Exception as e:
-            print(f"Setting güncelleme hatası: {e}")
+            print(f"Setting update error: {e}")
             return False
     
     def save_scan_result(self, scan_result):
-        """Tarama sonucunu history'ye kaydet"""
+        """Save scan result to history"""
         try:
             history = self.load_scan_history()
             history.append(scan_result)
             
-            # Son 100 kayıtı tut
+            # Keep last 100 records
             if len(history) > 100:
                 history = history[-100:]
             
@@ -336,4 +336,4 @@ class ConfigManager:
             with open(self.scan_history_file, 'w', encoding='utf-8') as f:
                 json.dump(history, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Scan result kaydetme hatası: {e}")
+            print(f"Scan result save error: {e}")

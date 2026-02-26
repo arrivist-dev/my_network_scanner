@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Docker Network Manager
-Docker container'ları ve network'leri tespit etme modülü
+Module for detecting Docker containers and networks
 """
 
 import json
@@ -19,39 +19,39 @@ class DockerManager:
         self.docker_socket_path = "/var/run/docker.sock"
         
     def _check_docker_availability(self):
-        """Docker'ın sisteme kurulu ve çalışır durumda olup olmadığını kontrol et"""
+        """Check if Docker is installed and running on the system"""
         try:
-            # Docker komutunun varlığını kontrol et
+            # Check if Docker command exists
             result = subprocess.run(['docker', '--version'], 
                                   capture_output=True, text=True, timeout=5)
             if result.returncode != 0:
-                # Docker komutu bulunamadıysa, Docker socket'i kontrol et
+                # If Docker command not found, check Docker socket
                 if self._check_docker_socket():
                     return True
                 return False
                 
-            # Docker daemon'un çalışıp çalışmadığını kontrol et
+            # Check if Docker daemon is running
             result = subprocess.run(['docker', 'info'], 
                                   capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 return True
                 
-            # Docker komutu başarısızsa, Docker socket'i kontrol et
+            # If Docker command fails, check Docker socket
             return self._check_docker_socket()
             
         except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
-            # Komut çalışmadıysa, Docker socket'i kontrol et
+            # If command fails, check Docker socket
             return self._check_docker_socket()
     
     def _check_docker_socket(self):
-        """Docker socket'inin erişilebilir olup olmadığını kontrol et"""
+        """Check if Docker socket is accessible"""
         try:
             return os.path.exists(self.docker_socket_path) and os.access(self.docker_socket_path, os.R_OK)
         except Exception:
             return False
     
     def _is_running_in_docker(self):
-        """Docker container içinde çalışıp çalışmadığını kontrol et"""
+        """Check if running inside a Docker container"""
         try:
             with open('/proc/1/cgroup', 'r') as f:
                 content = f.read()
@@ -60,12 +60,12 @@ class DockerManager:
             return False
     
     def _use_docker_socket_api(self, endpoint):
-        """Docker socket API kullanarak veri al"""
+        """Get data using Docker socket API"""
         try:
             import requests
             import json
             
-            # Docker socket üzerinden HTTP request yap
+            # Make HTTP request via Docker socket
             base_url = "http+unix://%2Fvar%2Frun%2Fdocker.sock"
             response = requests.get(f"{base_url}/{endpoint}", timeout=10)
             
@@ -75,15 +75,15 @@ class DockerManager:
                 return None
                 
         except Exception as e:
-            print(f"Docker socket API hatası: {e}")
+            print(f"Docker socket API error: {e}")
             return None
     
     def get_docker_networks(self):
-        """Docker network'lerini listele"""
+        """List Docker networks"""
         if not self.docker_available:
             return []
         
-        # Docker socket API kullanarak dene (container içinde çalışıyorsa)
+        # Try using Docker socket API (if running inside container)
         if self._is_running_in_docker() and self._check_docker_socket():
             try:
                 networks_data = self._use_docker_socket_api("networks")
@@ -95,12 +95,12 @@ class DockerManager:
                             networks.append(detailed_info)
                     return networks
             except Exception as e:
-                print(f"Docker socket API kullanımı başarısız: {e}")
+                print(f"Failed to use Docker socket API: {e}")
                 # Fallback to docker command
         
-        # Normal docker komutunu kullan
+        # Use normal docker command
         try:
-            # Docker network'leri al
+            # Get Docker networks
             result = subprocess.run(['docker', 'network', 'ls', '--format', 'json'], 
                                   capture_output=True, text=True, timeout=10)
             
@@ -112,7 +112,7 @@ class DockerManager:
                 if line.strip():
                     try:
                         network_basic = json.loads(line)
-                        # Her network için detaylı bilgi al
+                        # Get detailed info for each network
                         detailed_info = self._get_network_details(network_basic['ID'])
                         if detailed_info:
                             networks.append(detailed_info)
@@ -122,29 +122,29 @@ class DockerManager:
             return networks
             
         except Exception as e:
-            print(f"Docker network bilgileri alınamadı: {e}")
+            print(f"Failed to get Docker network info: {e}")
             return []
     
     def _get_network_details_from_socket(self, network_id):
-        """Docker socket API kullanarak network detaylarını al"""
+        """Get network details using Docker socket API"""
         try:
             network_data = self._use_docker_socket_api(f"networks/{network_id}")
             if not network_data:
                 return None
             
-            # IPAM bilgilerinden subnet'leri çıkar
+            # Extract subnets from IPAM info
             subnets = []
             if 'IPAM' in network_data and 'Config' in network_data['IPAM']:
                 for config in network_data['IPAM']['Config']:
                     if 'Subnet' in config:
                         subnets.append(config['Subnet'])
             
-            # Container'ları al
+            # Get containers
             containers = []
             if 'Containers' in network_data:
                 for container_id, container_info in network_data['Containers'].items():
                     containers.append({
-                        'id': container_id[:12],  # Kısa ID
+                        'id': container_id[:12],  # Short ID
                         'name': container_info.get('Name', 'Unknown'),
                         'ipv4_address': container_info.get('IPv4Address', '').split('/')[0],
                         'ipv6_address': container_info.get('IPv6Address', '').split('/')[0],
@@ -166,11 +166,11 @@ class DockerManager:
             }
             
         except Exception as e:
-            print(f"Socket network {network_id} detayları alınamadı: {e}")
+            print(f"Socket network {network_id} details could not be retrieved: {e}")
             return None
     
     def _get_network_details(self, network_id):
-        """Belirli bir network'ün detaylı bilgilerini al"""
+        """Get detailed info for a specific network"""
         try:
             result = subprocess.run(['docker', 'network', 'inspect', network_id], 
                                   capture_output=True, text=True, timeout=5)
@@ -180,19 +180,19 @@ class DockerManager:
                 
             network_data = json.loads(result.stdout)[0]
             
-            # IPAM bilgilerinden subnet'leri çıkar
+            # Extract subnets from IPAM info
             subnets = []
             if 'IPAM' in network_data and 'Config' in network_data['IPAM']:
                 for config in network_data['IPAM']['Config']:
                     if 'Subnet' in config:
                         subnets.append(config['Subnet'])
             
-            # Container'ları al
+            # Get containers
             containers = []
             if 'Containers' in network_data:
                 for container_id, container_info in network_data['Containers'].items():
                     containers.append({
-                        'id': container_id[:12],  # Kısa ID
+                        'id': container_id[:12],  # Short ID
                         'name': container_info.get('Name', 'Unknown'),
                         'ipv4_address': container_info.get('IPv4Address', '').split('/')[0],
                         'ipv6_address': container_info.get('IPv6Address', '').split('/')[0],
@@ -214,11 +214,11 @@ class DockerManager:
             }
             
         except Exception as e:
-            print(f"Network {network_id} detayları alınamadı: {e}")
+            print(f"Network {network_id} details could not be retrieved: {e}")
             return None
     
     def _extract_gateway(self, network_data):
-        """Network'ün gateway IP'sini çıkar"""
+        """Extract gateway IP of the network"""
         try:
             if 'IPAM' in network_data and 'Config' in network_data['IPAM']:
                 for config in network_data['IPAM']['Config']:
@@ -229,7 +229,7 @@ class DockerManager:
         return None
     
     def get_docker_containers(self):
-        """Çalışan Docker container'ları listele"""
+        """List running Docker containers"""
         if not self.docker_available:
             return []
             
@@ -245,7 +245,7 @@ class DockerManager:
                 if line.strip():
                     try:
                         container = json.loads(line)
-                        # Container'ın detaylı network bilgilerini al
+                        # Get detailed network info for container
                         detailed_info = self._get_container_network_details(container['ID'])
                         containers.append({
                             'id': container['ID'][:12],
@@ -263,11 +263,11 @@ class DockerManager:
             return containers
             
         except Exception as e:
-            print(f"Docker container bilgileri alınamadı: {e}")
+            print(f"Failed to get Docker container info: {e}")
             return []
     
     def _get_container_network_details(self, container_id):
-        """Container'ın network detaylarını al"""
+        """Get network details for a container"""
         try:
             result = subprocess.run(['docker', 'inspect', container_id], 
                                   capture_output=True, text=True, timeout=5)
@@ -298,11 +298,11 @@ class DockerManager:
             return {'networks': networks, 'ip_addresses': ip_addresses}
             
         except Exception as e:
-            print(f"Container {container_id} network detayları alınamadı: {e}")
+            print(f"Container {container_id} network details could not be retrieved: {e}")
             return {'networks': [], 'ip_addresses': []}
     
     def get_docker_scan_ranges(self):
-        """Docker network'lerinden tarama için IP aralıkları çıkar"""
+        """Extract IP ranges for scanning from Docker networks"""
         scan_ranges = []
         
         if not self.docker_available:
@@ -311,14 +311,14 @@ class DockerManager:
         networks = self.get_docker_networks()
         
         for network in networks:
-            # Sadece bridge ve custom network'leri dahil et
+            # Include only bridge and custom networks
             if network['driver'] in ['bridge', 'overlay', 'macvlan', 'ipvlan']:
                 for subnet in network['subnets']:
                     try:
-                        # Subnet'i validate et
+                        # Validate subnet
                         network_obj = ipaddress.ip_network(subnet, strict=False)
                         
-                        # Çok büyük network'leri atla (/8, /16 gibi)
+                        # Skip very large networks (/8, /16 etc.)
                         if network_obj.prefixlen >= 16:
                             scan_ranges.append({
                                 'network_name': network['name'],
@@ -335,18 +335,18 @@ class DockerManager:
         return scan_ranges
     
     def get_docker_interface_info(self):
-        """Docker virtual interface'lerini al (docker0, br-xxx vb.)"""
+        """Get Docker virtual interfaces (docker0, br-xxx etc.)"""
         docker_interfaces = []
         
         if not self.docker_available:
             return docker_interfaces
         
         try:
-            # Network interface'leri listele
+            # List network interfaces
             import psutil
             
             for interface_name, interface_info in psutil.net_if_addrs().items():
-                # Docker interface'lerini tespit et
+                # Detect Docker interfaces
                 if (interface_name.startswith('docker') or 
                     interface_name.startswith('br-') or 
                     interface_name.startswith('veth')):
@@ -363,7 +363,7 @@ class DockerManager:
                             break
                             
         except ImportError:
-            # psutil yoksa, ip komutunu kullan
+            # If psutil is not available, use ip command
             try:
                 result = subprocess.run(['ip', 'addr', 'show'], 
                                       capture_output=True, text=True, timeout=5)
@@ -372,12 +372,12 @@ class DockerManager:
             except Exception:
                 pass
         except Exception as e:
-            print(f"Docker interface bilgileri alınamadı: {e}")
+            print(f"Failed to get Docker interface info: {e}")
         
         return docker_interfaces
     
     def _get_docker_interface_description(self, interface_name):
-        """Docker interface açıklaması"""
+        """Docker interface description"""
         if interface_name == 'docker0':
             return 'Docker Default Bridge'
         elif interface_name.startswith('br-'):
@@ -388,19 +388,19 @@ class DockerManager:
             return 'Docker Virtual Interface'
     
     def _parse_ip_addr_output(self, output):
-        """ip addr show çıktısını parse et"""
+        """Parse output of ip addr show command"""
         interfaces = []
         current_interface = None
         
         for line in output.split('\n'):
             line = line.strip()
             
-            # Interface satırı
+            # Interface line
             if ': ' in line and ('docker' in line or 'br-' in line or 'veth' in line):
                 interface_name = line.split(':')[1].strip().split('@')[0]
                 current_interface = interface_name
             
-            # IP adresi satırı
+            # IP address line
             elif current_interface and line.startswith('inet ') and 'scope global' in line:
                 parts = line.split()
                 if len(parts) >= 2:
@@ -422,11 +422,11 @@ class DockerManager:
         return interfaces
     
     def get_docker_stats(self):
-        """Docker genel istatistikleri"""
+        """Docker general statistics"""
         if not self.docker_available:
             return {
                 'available': False,
-                'error': 'Docker kurulu değil veya çalışmıyor'
+                'error': 'Docker is not installed or not running'
             }
         
         try:

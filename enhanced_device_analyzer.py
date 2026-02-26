@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Gelişmiş Cihaz Analizörü - Enhanced Device Analyzer
-Raspberry Pi, IoT, sunucular için detaylı bilgi toplama
+Enhanced Device Analyzer
+Detailed information gathering for Raspberry Pi, IoT, servers
 """
 
 import socket
@@ -14,9 +14,9 @@ import requests
 import time
 import threading
 from datetime import datetime
-import paramiko  # SSH için gerekli
-import ftplib   # FTP için gerekli
-# import telnetlib # Telnet için gerekli - Python 3.13'te kaldırılmış
+import paramiko  # Required for SSH
+import ftplib   # Required for FTP
+# import telnetlib # Required for Telnet - Removed in Python 3.13
 from urllib.parse import urlparse
 import ssl
 import nmap
@@ -44,14 +44,14 @@ class EnhancedDeviceAnalyzer:
         self.session = requests.Session()
         self.session.timeout = self.timeout
         
-        # Cihaz bazında erişim bilgileri
+        # Per-device access credentials
         self.device_credentials = {}
         
-        # Credential manager entegrasyonu
+        # Credential manager integration
         self.credential_manager = credential_manager
         
     def set_device_credentials(self, ip, access_type, username=None, password=None, port=None, additional_info=None):
-        """Cihaz için erişim bilgilerini ayarla"""
+        """Set access credentials for a device"""
         if ip not in self.device_credentials:
             self.device_credentials[ip] = {}
         
@@ -63,9 +63,9 @@ class EnhancedDeviceAnalyzer:
         }
     
     def get_comprehensive_device_info(self, ip, mac, hostname, vendor, progress_callback=None):
-        """Kapsamlı cihaz bilgileri toplama"""
+        """Collect comprehensive device information"""
         
-        def log_operation(operation, status="başlatılıyor", details=""):
+        def log_operation(operation, status="starting", details=""):
             if progress_callback:
                 message = f"{ip} - 🔬🔬 {operation}: {status}"
                 if details:
@@ -92,104 +92,104 @@ class EnhancedDeviceAnalyzer:
             'detailed_ports': {}
         }
         
-        # 1. Gelişmiş Port Tarama
-        log_operation("🔌 Gelişmiş Port Analizi", "başlatılıyor", "1000+ port")
+        # 1. Advanced Port Scanning
+        log_operation("🔌 Advanced Port Analysis", "starting", "1000+ ports")
         enhanced_info['detailed_ports'] = self.comprehensive_port_scan(ip, progress_callback)
-        log_operation("🔌 Gelişmiş Port Analizi", "tamamlandı", f"{len(enhanced_info['detailed_ports'])} port bulundu")
+        log_operation("🔌 Advanced Port Analysis", "completed", f"{len(enhanced_info['detailed_ports'])} ports found")
         
-        # 2. Web Servisleri Analizi
-        log_operation("🌐 Web Servisleri Analizi", "başlatılıyor", "HTTP/HTTPS derinlemesine")
+        # 2. Web Services Analysis
+        log_operation("🌐 Web Services Analysis", "starting", "HTTP/HTTPS in-depth")
         enhanced_info['web_services'] = self.analyze_web_services(ip)
-        log_operation("🌐 Web Servisleri Analizi", "tamamlandı")
+        log_operation("🌐 Web Services Analysis", "completed")
         
-        # 3. SSH Analizi ve Erişim
-        log_operation("🔐 SSH Analizi", "başlatılıyor", "banner, algoritma, erişim")
+        # 3. SSH Analysis and Access
+        log_operation("🔐 SSH Analysis", "starting", "banner, algorithm, access")
         enhanced_info['remote_access']['ssh'] = self.analyze_ssh_service(ip, progress_callback)
-        log_operation("🔐 SSH Analizi", "tamamlandı")
+        log_operation("🔐 SSH Analysis", "completed")
         
-        # 4. FTP Analizi
-        log_operation("📁 FTP Analizi", "başlatılıyor", "anonymous, banner")
+        # 4. FTP Analysis
+        log_operation("📁 FTP Analysis", "starting", "anonymous, banner")
         enhanced_info['file_services']['ftp'] = self.analyze_ftp_service(ip)
-        log_operation("📁 FTP Analizi", "tamamlandı")
+        log_operation("📁 FTP Analysis", "completed")
         
-        # 5. SMB/CIFS Derinlemesine Analiz
-        log_operation("🗂️ SMB/CIFS Analizi", "başlatılıyor", "shares, permissions")
+        # 5. SMB/CIFS In-depth Analysis
+        log_operation("🗂️ SMB/CIFS Analysis", "starting", "shares, permissions")
         enhanced_info['file_services']['smb'] = self.analyze_smb_comprehensive(ip)
-        log_operation("🗂️ SMB/CIFS Analizi", "tamamlandı")
+        log_operation("🗂️ SMB/CIFS Analysis", "completed")
         
-        # 6. SNMP Detaylı Analiz
-        log_operation("📡 SNMP Detaylı Analiz", "başlatılıyor", "system, network, processes")
+        # 6. SNMP Detailed Analysis
+        log_operation("📡 SNMP Detailed Analysis", "starting", "system, network, processes")
         enhanced_info['network_services']['snmp'] = self.analyze_snmp_comprehensive(ip)
-        log_operation("📡 SNMP Detaylı Analiz", "tamamlandı")
+        log_operation("📡 SNMP Detailed Analysis", "completed")
         
-        # 7. Raspberry Pi Özel Analizi
-        log_operation("🥧 Raspberry Pi Analizi", "başlatılıyor", "GPIO, hardware, services")
+        # 7. Raspberry Pi Specific Analysis
+        log_operation("🥧 Raspberry Pi Analysis", "starting", "GPIO, hardware, services")
         enhanced_info['raspberry_pi_analysis'] = self.analyze_raspberry_pi(ip)
-        log_operation("🥧 Raspberry Pi Analizi", "tamamlandı")
+        log_operation("🥧 Raspberry Pi Analysis", "completed")
         
-        # 8. IoT Cihaz Analizi
-        log_operation("🌐 IoT Cihaz Analizi", "başlatılıyor", "protokoller, API'ler")
+        # 8. IoT Device Analysis
+        log_operation("🌐 IoT Device Analysis", "starting", "protocols, APIs")
         enhanced_info['iot_analysis'] = self.analyze_iot_device(ip)
-        log_operation("🌐 IoT Cihaz Analizi", "tamamlandı")
+        log_operation("🌐 IoT Device Analysis", "completed")
         
         # 9. OS Fingerprinting
-        log_operation("💻 İşletim Sistemi Tespiti", "başlatılıyor", "nmap, TTL, TCP")
+        log_operation("💻 Operating System Detection", "starting", "nmap, TTL, TCP")
         enhanced_info['system_identification']['os_detection'] = self.advanced_os_detection(ip)
-        log_operation("💻 İşletim Sistemi Tespiti", "tamamlandı")
+        log_operation("💻 Operating System Detection", "completed")
         
-        # 10. Güvenlik Analizi
-        log_operation("🛡️ Güvenlik Analizi", "başlatılıyor", "vulnerabilities, configs")
+        # 10. Security Analysis
+        log_operation("🛡️ Security Analysis", "starting", "vulnerabilities, configs")
         enhanced_info['security_analysis'] = self.security_analysis(ip)
-        log_operation("🛡️ Güvenlik Analizi", "tamamlandı")
+        log_operation("🛡️ Security Analysis", "completed")
         
-        # 11. Kapsamlı Cihaz Tipi Analizi
-        log_operation("🎯 Cihaz Tipi Analizi", "başlatılıyor", "comprehensive device detection")
+        # 11. Comprehensive Device Type Analysis
+        log_operation("🎯 Device Type Analysis", "starting", "comprehensive device detection")
         enhanced_info['device_type_analysis'] = self.comprehensive_device_type_analysis(
             ip, mac, hostname, vendor, enhanced_info
         )
-        log_operation("🎯 Cihaz Tipi Analizi", "tamamlandı")
+        log_operation("🎯 Device Type Analysis", "completed")
         
         # 12. Credential-Based Advanced Analysis
-        log_operation("🔐 Erişim Tabanlı Analiz", "başlatılıyor", "authenticated access analysis")
+        log_operation("🔐 Credential-Based Analysis", "starting", "authenticated access analysis")
         enhanced_info['credential_based_analysis'] = self.credential_based_analysis(ip)
-        log_operation("🔐 Erişim Tabanlı Analiz", "tamamlandı")
+        log_operation("🔐 Credential-Based Analysis", "completed")
         
-        # Bulunan servisleri open_ports formatına dönüştür
+        # Convert discovered services to open_ports format
         enhanced_info['discovered_ports'] = self.extract_discovered_ports(enhanced_info)
         
         return enhanced_info
     
     def comprehensive_port_scan(self, ip, progress_callback=None):
-        """Kapsamlı port taraması"""
+        """Comprehensive port scanning"""
         
         def log_port_operation(operation, details=""):
             if progress_callback:
-                progress_callback(f"{ip} - 🔌 Port Tarama: {operation} {details}")
+                progress_callback(f"{ip} - 🔌 Port Scanning: {operation} {details}")
         
         port_info = {}
         
         try:
             nm = nmap.PortScanner()
             
-            log_port_operation("başladı", "(1000+ port)...")
-            log_port_operation("ön tanımlı standart portlar taranıyor", "(22,80,443,...)")
+            log_port_operation("started", "(1000+ ports)...")
+            log_port_operation("scanning predefined standard ports", "(22,80,443,...)")
             
-            # Port aralıkları tarama
+            # Port range scanning
             port_ranges = [
-                ("1-100", "Port 1-100 arası sistem portları taranıyor..."),
-                ("100-1000", "Port 100-1000 arası uygulama portları taranıyor..."), 
-                ("1000-5000", "Port 1000-5000 arası kullanıcı portları taranıyor..."),
-                ("5000-10000", "Port 5000-10000 arası özel servis portları taranıyor...")
+                ("1-100", "Scanning ports 1-100 (system ports)..."),
+                ("100-1000", "Scanning ports 100-1000 (application ports)..."), 
+                ("1000-5000", "Scanning ports 1000-5000 (user ports)..."),
+                ("5000-10000", "Scanning ports 5000-10000 (special service ports)...")
             ]
             
             for port_range, description in port_ranges:
                 log_port_operation(description)
-                time.sleep(0.5)  # Görsel feedback için kısa bekleme
+                time.sleep(0.5)  # Short delay for visual feedback
             
-            # Top 1000 port taraması (root privileges gerektirmez)
+            # Top 1000 port scan (does not require root privileges)
             result = nm.scan(ip, arguments='-sT -sV --top-ports 1000 --version-all')
             
-            log_port_operation("servis versiyonları analiz ediliyor...")
+            log_port_operation("analyzing service versions...")
             
             if ip in result['scan']:
                 host_info = result['scan'][ip]
@@ -199,7 +199,7 @@ class EnhancedDeviceAnalyzer:
                     for port, port_data in host_info['tcp'].items():
                         if port_data.get('state') == 'open':
                             open_port_count += 1
-                            log_port_operation(f"açık port bulundu: {port} ({port_data.get('name', 'unknown')})")
+                            log_port_operation(f"open port found: {port} ({port_data.get('name', 'unknown')})")
                         
                         port_info[port] = {
                             'state': port_data.get('state', 'unknown'),
@@ -212,15 +212,15 @@ class EnhancedDeviceAnalyzer:
                             'cpe': port_data.get('cpe', '')
                         }
                 
-                log_port_operation("işletim sistemi parmak izi analizi yapılıyor...")
+                log_port_operation("performing operating system fingerprinting...")
                 
                 # Service-based OS fingerprinting
                 os_hints = self._analyze_service_os_hints(host_info.get('tcp', {}))
                 if os_hints:
                     port_info['os_hints'] = os_hints
-                    log_port_operation(f"işletim sistemi ipucu bulundu: {os_hints.get('os_family', 'unknown')}")
+                    log_port_operation(f"operating system hint found: {os_hints.get('os_family', 'unknown')}")
                 
-                log_port_operation(f"tamamlandı - {open_port_count} açık port bulundu")
+                log_port_operation(f"completed - {open_port_count} open ports found")
                     
         except Exception as e:
             port_info['error'] = str(e)
@@ -228,10 +228,10 @@ class EnhancedDeviceAnalyzer:
         return port_info
     
     def analyze_web_services(self, ip):
-        """Web servisleri derinlemesine analizi"""
+        """In-depth analysis of web services"""
         web_info = {}
         
-        # HTTP portları
+        # HTTP ports
         http_ports = [80, 8080, 8000, 8008, 8888, 3000, 5000, 9000]
         https_ports = [443, 8443, 9443]
         
@@ -241,7 +241,7 @@ class EnhancedDeviceAnalyzer:
             try:
                 url = f"{protocol}://{ip}:{port}"
                 
-                # HTTP başlıkları ve içerik analizi
+                # HTTP headers and content analysis
                 response = self.session.get(url, timeout=self.timeout, verify=False)
                 
                 web_info[f'{protocol}_{port}'] = {
@@ -254,7 +254,7 @@ class EnhancedDeviceAnalyzer:
                     'redirect_url': response.url if response.url != url else None,
                     'technologies': self.detect_web_technologies(response.text, response.headers),
                     'forms': self.extract_forms(response.text),
-                    'links': self.extract_links(response.text)[:20],  # İlk 20 link
+                    'links': self.extract_links(response.text)[:20],  # First 20 links
                     'meta_info': self.extract_meta_info(response.text)
                 }
                 
@@ -274,16 +274,16 @@ class EnhancedDeviceAnalyzer:
         return web_info
     
     def analyze_ssh_service(self, ip, progress_callback=None):
-        """SSH servis analizi"""
+        """SSH service analysis"""
         
         def log_ssh_operation(operation, details=""):
             if progress_callback:
-                progress_callback(f"{ip} - 🔐 SSH Analizi: {operation} {details}")
+                progress_callback(f"{ip} - 🔐 SSH Analysis: {operation} {details}")
         
         ssh_info = {}
         
         try:
-            log_ssh_operation("SSH portu kontrol ediliyor", "(port 22)")
+            log_ssh_operation("Checking SSH port", "(port 22)")
             
             # SSH banner grabbing
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -291,17 +291,17 @@ class EnhancedDeviceAnalyzer:
             
             result = sock.connect_ex((ip, 22))
             if result == 0:
-                log_ssh_operation("SSH servisi algılandı, banner bilgisi alınıyor...")
+                log_ssh_operation("SSH service detected, retrieving banner information...")
                 
                 banner = sock.recv(1024).decode().strip()
                 ssh_info['banner'] = banner
                 ssh_info['version'] = self.parse_ssh_version(banner)
                 
-                log_ssh_operation(f"SSH versiyonu: {ssh_info['version']}")
+                log_ssh_operation(f"SSH version: {ssh_info['version']}")
                 
-                # SSH bağlantı testi (eğer credential varsa)
+                # SSH connection test (if credentials are available)
                 if ip in self.device_credentials and 'ssh' in self.device_credentials[ip]:
-                    log_ssh_operation("kayıtlı SSH bilgileri bulundu, bağlantı test ediliyor...")
+                    log_ssh_operation("Stored SSH credentials found, testing connection...")
                     
                     creds = self.device_credentials[ip]['ssh']
                     ssh_info['connection_test'] = self.test_ssh_connection(
@@ -309,22 +309,22 @@ class EnhancedDeviceAnalyzer:
                     )
                     
                     if ssh_info['connection_test'].get('success'):
-                        log_ssh_operation("SSH bağlantısı başarılı!")
-                        log_ssh_operation("SSH ile cihaz üzerinde detaylı sistem bilgisi analizi yapılıyor...")
-                        log_ssh_operation("işletim sistemi, disk, uygulamalar, kullanıcılar analiz ediliyor...")
+                        log_ssh_operation("SSH connection successful!")
+                        log_ssh_operation("Performing detailed system information analysis via SSH...")
+                        log_ssh_operation("Analyzing operating system, disk, applications, users...")
                         
-                        # SSH üzerinden sistem bilgisi toplama
+                        # Collect system information via SSH
                         ssh_info['system_info'] = self.get_ssh_system_info(
                             ip, creds['username'], creds['password']
                         )
                         
-                        log_ssh_operation("sistem bilgisi analizi tamamlandı")
+                        log_ssh_operation("System information analysis completed")
                     else:
-                        log_ssh_operation("SSH bağlantısı başarısız - kimlik bilgileri geçersiz")
+                        log_ssh_operation("SSH connection failed - invalid credentials")
                 else:
-                    log_ssh_operation("kayıtlı SSH bilgisi yok, sadece banner analizi yapıldı")
+                    log_ssh_operation("No stored SSH credentials, only banner analysis performed")
             else:
-                log_ssh_operation("SSH servisi bulunamadı (port 22 kapalı)")
+                log_ssh_operation("SSH service not found (port 22 closed)")
             
             sock.close()
             
@@ -334,11 +334,11 @@ class EnhancedDeviceAnalyzer:
         return ssh_info
     
     def analyze_ftp_service(self, ip):
-        """FTP servis analizi"""
+        """FTP service analysis"""
         ftp_info = {}
         
         try:
-            # FTP port kontrolü
+            # Check FTP port
             if self.check_port_open(ip, 21):
                 ftp_info['port_21_open'] = True
                 
@@ -362,11 +362,11 @@ class EnhancedDeviceAnalyzer:
         return ftp_info
     
     def analyze_smb_comprehensive(self, ip):
-        """SMB derinlemesine analiz"""
+        """In-depth SMB analysis"""
         smb_info = {}
         
         try:
-            # SMB portlarını kontrol et
+            # Check SMB ports
             smb_ports = [139, 445]
             open_smb_ports = []
             
@@ -377,9 +377,9 @@ class EnhancedDeviceAnalyzer:
             smb_info['open_ports'] = open_smb_ports
             
             if open_smb_ports:
-                smb_info['status'] = 'SMB servisi aktif'
+                smb_info['status'] = 'SMB service active'
             else:
-                smb_info['status'] = 'SMB portları kapalı'
+                smb_info['status'] = 'SMB ports closed'
                 
         except Exception as e:
             smb_info['error'] = str(e)
@@ -387,14 +387,14 @@ class EnhancedDeviceAnalyzer:
         return smb_info
     
     def analyze_raspberry_pi(self, ip):
-        """Raspberry Pi özel analizi"""
+        """Raspberry Pi specific analysis"""
         rpi_info = {}
         
         try:
-            # Raspberry Pi tespiti için göstergeler
+            # Indicators for Raspberry Pi detection
             rpi_indicators = []
             
-            # 1. SSH üzerinden hardware bilgisi (eğer erişim varsa)
+            # 1. Hardware information via SSH (if access is available)
             if ip in self.device_credentials and 'ssh' in self.device_credentials[ip]:
                 creds = self.device_credentials[ip]['ssh']
                 hardware_info = self.get_rpi_hardware_info(ip, creds['username'], creds['password'])
@@ -402,7 +402,7 @@ class EnhancedDeviceAnalyzer:
                     rpi_info['hardware'] = hardware_info
                     rpi_indicators.append('hardware_detected')
             
-            # 2. Web arayüzü tespiti (common RPI services)
+            # 2. Web interface detection (common RPI services)
             rpi_services = [
                 {'port': 80, 'path': '/admin', 'indicator': 'pi-hole'},
                 {'port': 8080, 'path': '/', 'indicator': 'web_interface'},
@@ -425,8 +425,8 @@ class EnhancedDeviceAnalyzer:
                 except:
                     pass
             
-            # 3. GPIO ve hardware interface tespiti
-            gpio_ports = [8266, 1883, 8883]  # ESP, MQTT portları
+            # 3. GPIO and hardware interface detection
+            gpio_ports = [8266, 1883, 8883]  # ESP, MQTT ports
             for port in gpio_ports:
                 if self.check_port_open(ip, port):
                     rpi_info[f'gpio_service_{port}'] = {'status': 'detected'}
@@ -441,11 +441,11 @@ class EnhancedDeviceAnalyzer:
         return rpi_info
     
     def analyze_iot_device(self, ip):
-        """IoT cihaz analizi"""
+        """IoT device analysis"""
         iot_info = {}
         
         try:
-            # IoT protokolleri
+            # IoT protocols
             iot_ports = {
                 1883: 'MQTT',
                 8883: 'MQTT_SSL',
@@ -466,7 +466,7 @@ class EnhancedDeviceAnalyzer:
                     }
                     detected_protocols.append(protocol)
                     
-                    # Protokol özel analiz
+                    # Protocol-specific analysis
                     if protocol == 'MQTT':
                         iot_info['mqtt_analysis'] = self.analyze_mqtt_service(ip, port)
                     elif protocol == 'HTTP_IoT':
@@ -481,12 +481,12 @@ class EnhancedDeviceAnalyzer:
         return iot_info
     
     def advanced_os_detection(self, ip):
-        """Gelişmiş OS tespiti"""
+        """Advanced OS detection"""
         os_info = {}
         
         try:
             nm = nmap.PortScanner()
-            # OS detection için service banner'larından çıkarım yap (root gerektirmez)
+            # Infer OS detection from service banners (does not require root)
             result = nm.scan(ip, arguments='-sT -sV --version-all')
             
             if ip in result['scan']:
@@ -503,13 +503,13 @@ class EnhancedDeviceAnalyzer:
         return os_info
     
     def security_analysis(self, ip):
-        """Güvenlik analizi"""
+        """Security analysis"""
         security_info = {}
         
         try:
-            # Basit güvenlik kontrolleri
+            # Basic security checks
             security_info['open_ports_check'] = 'Implemented'
-            security_info['note'] = 'Detaylı zafiyet taraması için nmap script tarama gerekli'
+            security_info['note'] = 'Detailed vulnerability scanning requires nmap script scanning'
                             
         except Exception as e:
             security_info['error'] = str(e)
@@ -517,7 +517,7 @@ class EnhancedDeviceAnalyzer:
         return security_info
     
     def check_port_open(self, ip, port):
-        """Port açık mı kontrol et"""
+        """Check if a port is open"""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(2)
@@ -528,7 +528,7 @@ class EnhancedDeviceAnalyzer:
             return False
     
     def get_rpi_hardware_info(self, ip, username, password):
-        """SSH ile Raspberry Pi hardware bilgisi"""
+        """Retrieve Raspberry Pi hardware information via SSH"""
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -562,19 +562,19 @@ class EnhancedDeviceAnalyzer:
             return {'error': str(e)}
     
     def analyze_mqtt_service(self, ip, port):
-        """MQTT servis analizi"""
+        """MQTT service analysis"""
         mqtt_info = {}
         
         try:
             if not MQTT_AVAILABLE:
-                mqtt_info['error'] = 'paho-mqtt kütüphanesi bulunamadı'
+                mqtt_info['error'] = 'paho-mqtt library not found'
                 return mqtt_info
             
             def on_connect(client, userdata, flags, rc):
                 mqtt_info['connection_result'] = rc
                 if rc == 0:
                     mqtt_info['status'] = 'accessible'
-                    client.subscribe('#')  # Tüm topic'leri dinle
+                    client.subscribe('#')  # Listen to all topics
                 else:
                     mqtt_info['status'] = 'connection_failed'
             
@@ -583,7 +583,7 @@ class EnhancedDeviceAnalyzer:
                     mqtt_info['topics'] = []
                 mqtt_info['topics'].append({
                     'topic': msg.topic,
-                    'payload': str(msg.payload.decode()[:100])  # İlk 100 karakter
+                    'payload': str(msg.payload.decode()[:100])  # First 100 characters
                 })
             
             client = mqtt.Client()
@@ -592,7 +592,7 @@ class EnhancedDeviceAnalyzer:
             
             client.connect(ip, port, 10)
             client.loop_start()
-            time.sleep(5)  # 5 saniye dinle
+            time.sleep(5)  # Listen for 5 seconds
             client.loop_stop()
             client.disconnect()
             
@@ -602,13 +602,13 @@ class EnhancedDeviceAnalyzer:
         return mqtt_info
     
     def test_ssh_connection(self, ip, username, password):
-        """SSH bağlantı testi"""
+        """Test SSH connection"""
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(ip, username=username, password=password, timeout=self.timeout)
             
-            # Basit komut testi
+            # Simple command test
             stdin, stdout, stderr = ssh.exec_command('whoami')
             user = stdout.read().decode().strip()
             
@@ -627,7 +627,7 @@ class EnhancedDeviceAnalyzer:
             }
     
     def get_ssh_system_info(self, ip, username, password):
-        """SSH ile sistem bilgisi toplama"""
+        """Collect system information via SSH"""
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -662,7 +662,7 @@ class EnhancedDeviceAnalyzer:
     
     # Helper methods
     def extract_title(self, html):
-        """HTML'den title çıkar"""
+        """Extract title from HTML"""
         try:
             import re
             match = re.search(r'<title.*?>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
@@ -671,10 +671,10 @@ class EnhancedDeviceAnalyzer:
             return ''
     
     def detect_web_technologies(self, html, headers):
-        """Web teknolojileri tespit et"""
+        """Detect web technologies"""
         technologies = []
         
-        # Server header analizi
+        # Analyze Server header
         server = headers.get('Server', '').lower()
         if 'apache' in server:
             technologies.append('Apache')
@@ -683,7 +683,7 @@ class EnhancedDeviceAnalyzer:
         if 'microsoft' in server:
             technologies.append('IIS')
             
-        # HTML analizi
+        # Analyze HTML
         html_lower = html.lower()
         if 'wordpress' in html_lower:
             technologies.append('WordPress')
@@ -701,7 +701,7 @@ class EnhancedDeviceAnalyzer:
         return technologies
     
     def extract_forms(self, html):
-        """HTML'den formları çıkar"""
+        """Extract forms from HTML"""
         try:
             import re
             forms = re.findall(r'<form.*?</form>', html, re.IGNORECASE | re.DOTALL)
@@ -710,7 +710,7 @@ class EnhancedDeviceAnalyzer:
             return 0
     
     def extract_links(self, html):
-        """HTML'den linkleri çıkar"""
+        """Extract links from HTML"""
         try:
             import re
             links = re.findall(r'href=[\'"]?([^\'" >]+)', html, re.IGNORECASE)
@@ -719,7 +719,7 @@ class EnhancedDeviceAnalyzer:
             return []
     
     def extract_meta_info(self, html):
-        """Meta bilgilerini çıkar"""
+        """Extract meta information"""
         meta_info = {}
         try:
             import re
@@ -745,12 +745,12 @@ class EnhancedDeviceAnalyzer:
         return meta_info
     
     def detect_api_endpoints(self, html):
-        """API endpoint'leri tespit et"""
+        """Detect API endpoints"""
         endpoints = []
         try:
             import re
             
-            # JavaScript'te API call'ları ara
+            # Search for API calls in JavaScript
             api_patterns = [
                 r'/api/[^\s"\']+',
                 r'/rest/[^\s"\']+',
@@ -767,10 +767,10 @@ class EnhancedDeviceAnalyzer:
         except:
             pass
             
-        return list(set(endpoints))[:10]  # İlk 10 unique endpoint
+        return list(set(endpoints))[:10]  # First 10 unique endpoints
     
     def detect_admin_panels(self, ip, port, protocol):
-        """Admin panel tespiti"""
+        """Detect admin panels"""
         admin_paths = [
             '/admin', '/administrator', '/admin.php', '/wp-admin',
             '/cpanel', '/plesk', '/phpmyadmin', '/adminer',
@@ -794,18 +794,18 @@ class EnhancedDeviceAnalyzer:
         return admin_panels
     
     def parse_ssh_version(self, banner):
-        """SSH banner'dan versiyon çıkar"""
+        """Extract SSH version from banner"""
         try:
             return banner.split('-')[1] if '-' in banner else banner
         except:
             return banner
     
     def analyze_smb_comprehensive(self, ip):
-        """SMB derinlemesine analiz"""
+        """In-depth SMB analysis"""
         smb_info = {}
         
         try:
-            # smbclient ile share listesi
+            # List shares using smbclient
             cmd = f'smbclient -L {ip} -N 2>/dev/null'
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=self.timeout)
             
@@ -813,7 +813,7 @@ class EnhancedDeviceAnalyzer:
                 shares = self.parse_smb_shares(result.stdout)
                 smb_info['shares'] = shares
                 
-                # Her share için detaylı bilgi
+                # Detailed information for each share
                 for share in shares:
                     try:
                         cmd = f'smbclient //{ip}/{share} -N -c "ls" 2>/dev/null'
@@ -821,7 +821,7 @@ class EnhancedDeviceAnalyzer:
                         if result.returncode == 0:
                             smb_info[f'share_{share}'] = {
                                 'accessible': True,
-                                'content': result.stdout[:500]  # İlk 500 karakter
+                                'content': result.stdout[:500]  # First 500 characters
                             }
                     except:
                         pass
@@ -832,7 +832,7 @@ class EnhancedDeviceAnalyzer:
         return smb_info
     
     def parse_smb_shares(self, output):
-        """SMB share listesini parse et"""
+        """Parse SMB share list"""
         shares = []
         try:
             import re
@@ -849,15 +849,15 @@ class EnhancedDeviceAnalyzer:
         return shares
     
     def analyze_snmp_comprehensive(self, ip):
-        """SNMP kapsamlı analiz"""
+        """Comprehensive SNMP analysis"""
         snmp_info = {}
         
         try:
             if not SNMP_AVAILABLE:
-                snmp_info['error'] = 'pysnmp kütüphanesi bulunamadı'
+                snmp_info['error'] = 'pysnmp library not found'
                 return snmp_info
             
-            # SNMP OID'ler
+            # SNMP OIDs
             oids = {
                 'system_description': '1.3.6.1.2.1.1.1.0',
                 'system_name': '1.3.6.1.2.1.1.5.0',
@@ -893,12 +893,12 @@ class EnhancedDeviceAnalyzer:
         return snmp_info
     
     def advanced_os_detection(self, ip):
-        """Gelişmiş OS tespiti"""
+        """Advanced OS detection"""
         os_info = {}
         
         try:
             nm = nmap.PortScanner()
-            # OS detection için service banner'larından çıkarım yap (root gerektirmez)
+            # Infer OS detection from service banners (does not require root)
             result = nm.scan(ip, arguments='-sT -sV --version-all')
             
             if ip in result['scan']:
@@ -918,11 +918,11 @@ class EnhancedDeviceAnalyzer:
         return os_info
     
     def security_analysis(self, ip):
-        """Güvenlik analizi"""
+        """Security analysis"""
         security_info = {}
         
         try:
-            # Açık portlarda zafiyet taraması - Non-privileged alternative
+            # Vulnerability scanning on open ports - Non-privileged alternative
             nm = nmap.PortScanner()
             # Use service detection instead of vuln scripts (no root required)
             result = nm.scan(ip, arguments='-sT -sV --version-all --script-timeout 30s')
@@ -940,11 +940,11 @@ class EnhancedDeviceAnalyzer:
         return security_info
     
     def analyze_iot_http(self, ip, port):
-        """IoT HTTP servisleri analizi"""
+        """Analyze IoT HTTP services"""
         iot_http_info = {}
         
         try:
-            # IoT cihaz spesifik endpoint'ler
+            # IoT device-specific endpoints
             iot_endpoints = [
                 '/', '/status', '/info', '/config', '/api',
                 '/cgi-bin/luci', '/setup.cgi', '/index.cgi'
@@ -971,7 +971,7 @@ class EnhancedDeviceAnalyzer:
         return iot_http_info
     
     def detect_iot_indicators(self, html):
-        """IoT göstergelerini tespit et"""
+        """Detect IoT indicators"""
         indicators = []
         html_lower = html.lower()
         
@@ -988,20 +988,20 @@ class EnhancedDeviceAnalyzer:
         return indicators
     
     def extract_discovered_ports(self, enhanced_info):
-        """Enhanced analiz sonucunda bulunan servisleri open_ports formatına dönüştürür"""
+        """Convert discovered services from enhanced analysis to open_ports format"""
         discovered_ports = []
         
         try:
-            # 1. Web servisleri analizi
+            # 1. Web services analysis
             web_services = enhanced_info.get('web_services', {})
             for service_key, service_data in web_services.items():
                 if isinstance(service_data, dict) and 'error' not in service_data:
-                    # Service key'den port ve protokolü çıkar (örn: http_8080, https_443)
+                    # Extract port and protocol from service key (e.g., http_8080, https_443)
                     port_match = re.search(r'(\d+)$', service_key)
                     if port_match:
                         port = int(port_match.group(1))
                         
-                        # Servis tanımını oluştur
+                        # Generate service description
                         description = self.generate_service_description(service_data, service_key)
                         
                         if description:
@@ -1012,7 +1012,7 @@ class EnhancedDeviceAnalyzer:
                                 'source': 'enhanced_analysis'
                             })
             
-            # 2. Raspberry Pi servisleri
+            # 2. Raspberry Pi services
             rpi_analysis = enhanced_info.get('raspberry_pi_analysis', {})
             for key, data in rpi_analysis.items():
                 if key.startswith('service_') and isinstance(data, dict):
@@ -1022,7 +1022,7 @@ class EnhancedDeviceAnalyzer:
                         indicator = data.get('indicator', '')
                         title = data.get('title', '')
                         
-                        # RPI servis tanımını oluştur
+                        # Generate RPI service description
                         description = self.generate_rpi_service_description(indicator, title)
                         
                         if description:
@@ -1035,7 +1035,7 @@ class EnhancedDeviceAnalyzer:
                     except ValueError:
                         continue
             
-            # 3. SSH servisi
+            # 3. SSH service
             ssh_info = enhanced_info.get('remote_access', {}).get('ssh', {})
             if ssh_info.get('banner'):
                 discovered_ports.append({
@@ -1045,7 +1045,7 @@ class EnhancedDeviceAnalyzer:
                     'source': 'ssh_analysis'
                 })
             
-            # 4. Detailed ports analizi
+            # 4. Detailed ports analysis
             detailed_ports = enhanced_info.get('detailed_ports', {})
             for port_key, port_data in detailed_ports.items():
                 if isinstance(port_key, (int, str)) and str(port_key).isdigit():
@@ -1055,7 +1055,7 @@ class EnhancedDeviceAnalyzer:
                         version = port_data.get('version', '')
                         product = port_data.get('product', '')
                         
-                        # Detaylı servis tanımını oluştur
+                        # Generate detailed service description
                         description = self.generate_detailed_port_description(service, version, product)
                         
                         if description and port not in [p['port'] for p in discovered_ports]:
@@ -1066,7 +1066,7 @@ class EnhancedDeviceAnalyzer:
                                 'source': 'port_scan'
                             })
             
-            # 5. IoT protokolleri
+            # 5. IoT protocols
             iot_analysis = enhanced_info.get('iot_analysis', {})
             for protocol_key, protocol_data in iot_analysis.items():
                 if isinstance(protocol_data, dict) and protocol_data.get('port'):
@@ -1081,17 +1081,17 @@ class EnhancedDeviceAnalyzer:
                     })
             
         except Exception as e:
-            print(f"Extract discovered ports hatası: {e}")
+            print(f"Extract discovered ports error: {e}")
         
         return discovered_ports
     
     def generate_service_description(self, service_data, service_key):
-        """Web servis verilerinden açıklama oluşturur"""
+        """Generate description from web service data"""
         try:
             title = service_data.get('title', '').strip()
             server = service_data.get('server', '').strip()
             
-            # Özel uygulama tespitleri
+            # Specific application detections
             if 'qbittorrent' in title.lower() or 'qbittorrent' in server.lower():
                 return "qBittorrent WebUI"
             elif 'speedtest' in title.lower():
@@ -1111,23 +1111,23 @@ class EnhancedDeviceAnalyzer:
             elif 'apache' in server.lower() and not title:
                 return "Apache Web Server"
             elif title and len(title) > 3:
-                # Genel title kullan (çok kısa değilse)
+                # Use general title (if not too short)
                 return f"Web Service - {title[:50]}"
             elif server:
                 return f"Web Server - {server}"
             else:
-                # Protocol'e göre genel isim
+                # General name based on protocol
                 if 'https' in service_key:
                     return "HTTPS Web Service"
                 else:
                     return "HTTP Web Service"
                     
         except Exception as e:
-            print(f"Service description hatası: {e}")
+            print(f"Service description error: {e}")
             return "Web Service"
     
     def generate_rpi_service_description(self, indicator, title):
-        """Raspberry Pi servis verilerinden açıklama oluşturur"""
+        """Generate description from Raspberry Pi service data"""
         try:
             if indicator == 'pi-hole':
                 return "Pi-hole DNS"
@@ -1148,11 +1148,11 @@ class EnhancedDeviceAnalyzer:
                 return f"RPI Service - {indicator}" if indicator else "Raspberry Pi Service"
                 
         except Exception as e:
-            print(f"RPI service description hatası: {e}")
+            print(f"RPI service description error: {e}")
             return "Raspberry Pi Service"
     
     def generate_detailed_port_description(self, service, version, product):
-        """Detaylı port verilerinden açıklama oluşturur"""
+        """Generate description from detailed port data"""
         try:
             description_parts = []
             
@@ -1170,11 +1170,11 @@ class EnhancedDeviceAnalyzer:
                 return None
                 
         except Exception as e:
-            print(f"Detailed port description hatası: {e}")
+            print(f"Detailed port description error: {e}")
             return None
     
     def _analyze_service_os_hints(self, tcp_ports):
-        """Service banner'larından OS hint'leri çıkar"""
+        """Extract OS hints from service banners"""
         os_hints = {
             'detected_systems': [],
             'confidence_scores': {},
@@ -1188,7 +1188,7 @@ class EnhancedDeviceAnalyzer:
                 name = service_info.get('name', '').lower()
                 extrainfo = service_info.get('extrainfo', '').lower()
                 
-                # Service evidence toplama
+                # Collect service evidence
                 evidence = f"Port {port}: {product} {version} ({name}) {extrainfo}".strip()
                 os_hints['service_evidence'].append(evidence)
                 
@@ -1224,7 +1224,7 @@ class EnhancedDeviceAnalyzer:
                 elif name == 'telnet' and 'cisco' in extrainfo:
                     self._add_os_hint(os_hints, 'Cisco IOS', 0.8)
         
-        # En yüksek confidence'lı sistemleri belirle
+        # Determine systems with highest confidence
         if os_hints['confidence_scores']:
             sorted_os = sorted(os_hints['confidence_scores'].items(), 
                              key=lambda x: x[1], reverse=True)
@@ -1233,9 +1233,9 @@ class EnhancedDeviceAnalyzer:
         return os_hints if os_hints['detected_systems'] else None
     
     def _add_os_hint(self, os_hints, os_type, confidence):
-        """OS hint ekle ve confidence score'u güncelle"""
+        """Add OS hint and update confidence score"""
         if os_type in os_hints['confidence_scores']:
-            # Mevcut confidence'ı güncelle (max'ı al)
+            # Update existing confidence (take max)
             os_hints['confidence_scores'][os_type] = max(
                 os_hints['confidence_scores'][os_type], confidence
             )
@@ -1243,16 +1243,16 @@ class EnhancedDeviceAnalyzer:
             os_hints['confidence_scores'][os_type] = confidence
     
     def comprehensive_device_type_analysis(self, ip, mac, hostname, vendor, enhanced_info):
-        """Kapsamlı cihaz tipi analizi - tüm cihaz tiplerini değerlendir"""
+        """Comprehensive device type analysis - evaluate all device types"""
         try:
-            # SmartDeviceIdentifier kullanarak cihaz tipini belirle
+            # Use SmartDeviceIdentifier to determine device type
             from smart_device_identifier import SmartDeviceIdentifier
             from config import ConfigManager
             
             config_manager = ConfigManager()
             identifier = SmartDeviceIdentifier(config_manager)
             
-            # Device info oluştur
+            # Create device info
             device_info = {
                 'ip': ip,
                 'mac': mac,
@@ -1261,15 +1261,15 @@ class EnhancedDeviceAnalyzer:
                 'open_ports': self._extract_open_ports_from_enhanced(enhanced_info)
             }
             
-            # Kapsamlı tanımlama yap
+            # Perform comprehensive identification
             identification_result = identifier.identify_device_comprehensive(
                 device_info, enhanced_info
             )
             
-            # Tüm cihaz tiplerinin skorlarını al
+            # Get scores for all device types
             all_scores = identification_result.get('scores', {})
             
-            # Cihaz tipi analizi sonucu
+            # Device type analysis result
             analysis_result = {
                 'detected_type': identification_result.get('device_type', 'unknown'),
                 'confidence': identification_result.get('confidence', 0.0),
@@ -1278,7 +1278,7 @@ class EnhancedDeviceAnalyzer:
                 'detailed_analysis': identification_result.get('details', {})
             }
             
-            # Her cihaz tipi için olasılık hesapla
+            # Calculate probabilities for each device type
             device_types = [
                 'camera', 'smart_tv', 'air_conditioner', 'apple_device', 
                 'gaming_console', 'pet_device', 'router', 'printer', 
@@ -1293,7 +1293,7 @@ class EnhancedDeviceAnalyzer:
                 
                 analysis_result['device_probabilities'][device_type] = probability
                 
-                # Her cihaz tipi için göstergeleri topla
+                # Collect indicators for each device type
                 analysis_result['indicators'][device_type] = self._get_device_type_indicators(
                     device_type, enhanced_info, device_info
                 )
@@ -1301,7 +1301,7 @@ class EnhancedDeviceAnalyzer:
             return analysis_result
             
         except Exception as e:
-            print(f"Comprehensive device type analysis hatası: {e}")
+            print(f"Comprehensive device type analysis error: {e}")
             return {
                 'detected_type': 'unknown',
                 'confidence': 0.0,
@@ -1311,10 +1311,10 @@ class EnhancedDeviceAnalyzer:
             }
     
     def _extract_open_ports_from_enhanced(self, enhanced_info):
-        """Enhanced info'dan açık portları çıkar"""
+        """Extract open ports from enhanced info"""
         open_ports = []
         
-        # Detailed ports'tan al
+        # Get from detailed ports
         detailed_ports = enhanced_info.get('detailed_ports', {})
         for port, port_info in detailed_ports.items():
             if port_info.get('state') == 'open':
@@ -1327,7 +1327,7 @@ class EnhancedDeviceAnalyzer:
         return open_ports
     
     def _get_device_type_indicators(self, device_type, enhanced_info, device_info):
-        """Cihaz tipi için spesifik göstergeleri topla"""
+        """Collect specific indicators for a device type"""
         indicators = []
         
         try:
@@ -1389,12 +1389,12 @@ class EnhancedDeviceAnalyzer:
                     indicators.append('pet_vendor')
             
         except Exception as e:
-            print(f"Device type indicators hatası ({device_type}): {e}")
+            print(f"Device type indicators error ({device_type}): {e}")
         
         return indicators
     
     def credential_based_analysis(self, ip):
-        """Credential manager'dan alınan erişim bilgileri ile derin analiz"""
+        """In-depth analysis using access credentials from credential manager"""
         analysis_result = {
             'access_methods': {},
             'system_info': {},
@@ -1404,11 +1404,11 @@ class EnhancedDeviceAnalyzer:
         }
         
         if not self.credential_manager:
-            analysis_result['error'] = 'Credential manager mevcut değil'
+            analysis_result['error'] = 'Credential manager not available'
             return analysis_result
         
         try:
-            # Tüm kaydedilmiş credential'ları al
+            # Get all stored credentials
             all_credentials = self.credential_manager.get_all_device_credentials(ip)
             
             for access_type, creds in all_credentials.items():
@@ -1421,42 +1421,42 @@ class EnhancedDeviceAnalyzer:
                     'data': {}
                 }
                 
-                # Her erişim türü için özel analiz
+                # Perform specific analysis for each access type
                 if access_type == 'ssh':
                     ssh_analysis = self._analyze_via_ssh(ip, creds)
                     analysis_result['access_methods']['ssh']['data'] = ssh_analysis
                     analysis_result['access_methods']['ssh']['tested'] = True
-                    
+                
                 elif access_type == 'http':
                     http_analysis = self._analyze_via_http(ip, creds)
                     analysis_result['access_methods']['http']['data'] = http_analysis
                     analysis_result['access_methods']['http']['tested'] = True
-                    
+                
                 elif access_type == 'ftp':
                     ftp_analysis = self._analyze_via_ftp(ip, creds)
                     analysis_result['access_methods']['ftp']['data'] = ftp_analysis
                     analysis_result['access_methods']['ftp']['tested'] = True
-                    
+                
                 elif access_type == 'snmp':
                     snmp_analysis = self._analyze_via_snmp(ip, creds)
                     analysis_result['access_methods']['snmp']['data'] = snmp_analysis
                     analysis_result['access_methods']['snmp']['tested'] = True
-                    
+                
                 elif access_type == 'api':
                     api_analysis = self._analyze_via_api(ip, creds)
                     analysis_result['access_methods']['api']['data'] = api_analysis
                     analysis_result['access_methods']['api']['tested'] = True
             
-            # Genel sistem bilgilerini birleştir
+            # Merge general system information
             self._merge_system_info(analysis_result)
-            
+        
         except Exception as e:
-            analysis_result['error'] = f'Credential based analysis hatası: {str(e)}'
+            analysis_result['error'] = f'Credential based analysis error: {str(e)}'
         
         return analysis_result
     
     def _analyze_via_ssh(self, ip, creds):
-        """SSH üzerinden detaylı sistem analizi"""
+        """Detailed system analysis via SSH"""
         analysis = {
             'system_info': {},
             'services': [],
@@ -1480,7 +1480,7 @@ class EnhancedDeviceAnalyzer:
                 timeout=10
             )
             
-            # Sistem bilgileri komutları
+            # System information commands
             commands = {
                 'system_info': {
                     'uname': 'uname -a',
@@ -1517,7 +1517,7 @@ class EnhancedDeviceAnalyzer:
                 }
             }
             
-            # Komutları çalıştır
+            # Execute commands
             for category, cmd_dict in commands.items():
                 analysis[category] = {}
                 for cmd_name, command in cmd_dict.items():
@@ -1530,14 +1530,14 @@ class EnhancedDeviceAnalyzer:
                         analysis[category][cmd_name] = f'Error: {str(e)}'
             
             ssh.close()
-            
+        
         except Exception as e:
-            analysis['error'] = f'SSH analiz hatası: {str(e)}'
+            analysis['error'] = f'SSH analysis error: {str(e)}'
         
         return analysis
     
     def _analyze_via_http(self, ip, creds):
-        """HTTP üzerinden web arayüzü analizi"""
+        """Web interface analysis via HTTP"""
         analysis = {
             'web_interface': {},
             'api_endpoints': [],
@@ -1560,7 +1560,7 @@ class EnhancedDeviceAnalyzer:
                 try:
                     base_url = f"{protocol}://{ip}:{port}"
                     
-                    # Ana sayfa analizi
+                    # Analyze homepage
                     response = requests.get(
                         base_url, 
                         auth=HTTPBasicAuth(username, password) if username else None,
@@ -1574,7 +1574,7 @@ class EnhancedDeviceAnalyzer:
                         analysis['web_interface']['technology'] = self._detect_technology(response)
                         analysis['security_headers'] = dict(response.headers)
                         
-                        # API endpoint'lerini tara
+                        # Scan for API endpoints
                         api_endpoints = ['/api', '/api/v1', '/status', '/config', '/admin', '/management']
                         for endpoint in api_endpoints:
                             try:
@@ -1593,18 +1593,18 @@ class EnhancedDeviceAnalyzer:
                             except:
                                 pass
                         
-                        break  # Başarılıysa diğer protokolü deneme
+                        break  # Stop if successful
                         
                 except Exception as e:
                     continue
             
         except Exception as e:
-            analysis['error'] = f'HTTP analiz hatası: {str(e)}'
+            analysis['error'] = f'HTTP analysis error: {str(e)}'
         
         return analysis
     
     def _analyze_via_ftp(self, ip, creds):
-        """FTP üzerinden dosya sistemi analizi"""
+        """File system analysis via FTP"""
         analysis = {
             'directory_structure': {},
             'file_listing': [],
@@ -1619,15 +1619,15 @@ class EnhancedDeviceAnalyzer:
             ftp.connect(ip, creds.get('port', 21))
             ftp.login(creds.get('username'), creds.get('password'))
             
-            # Server bilgisi
+            # Server information
             analysis['server_info']['welcome'] = ftp.getwelcome()
             
-            # Dizin listesi
+            # Directory listing
             try:
                 files = ftp.nlst()
-                analysis['file_listing'] = files[:20]  # İlk 20 dosya
+                analysis['file_listing'] = files[:20]  # First 20 files
                 
-                # Detaylı liste
+                # Detailed listing
                 detailed_list = []
                 ftp.retrlines('LIST', detailed_list.append)
                 analysis['directory_structure']['detailed'] = detailed_list[:10]
@@ -1638,12 +1638,12 @@ class EnhancedDeviceAnalyzer:
             ftp.quit()
             
         except Exception as e:
-            analysis['error'] = f'FTP analiz hatası: {str(e)}'
+            analysis['error'] = f'FTP analysis error: {str(e)}'
         
         return analysis
     
     def _analyze_via_snmp(self, ip, creds):
-        """SNMP üzerinden sistem yönetim bilgileri"""
+        """System management information via SNMP"""
         analysis = {
             'system_info': {},
             'network_interfaces': {},
@@ -1660,7 +1660,7 @@ class EnhancedDeviceAnalyzer:
             port = creds.get('port', 161)
             community = creds.get('username', 'public')
             
-            # Sistem OID'leri
+            # System OIDs
             oids = {
                 'system_description': '1.3.6.1.2.1.1.1.0',
                 'system_uptime': '1.3.6.1.2.1.1.3.0',
@@ -1688,14 +1688,14 @@ class EnhancedDeviceAnalyzer:
                     analysis['system_info'][name] = f'Error: {str(e)}'
             
         except ImportError:
-            analysis['error'] = 'SNMP analiz için pysnmp kütüphanesi gerekli'
+            analysis['error'] = 'pysnmp library required for SNMP analysis'
         except Exception as e:
-            analysis['error'] = f'SNMP analiz hatası: {str(e)}'
+            analysis['error'] = f'SNMP analysis error: {str(e)}'
         
         return analysis
     
     def _analyze_via_api(self, ip, creds):
-        """API üzerinden sistem bilgisi toplama"""
+        """Collect system information via API"""
         analysis = {
             'api_info': {},
             'endpoints': [],
@@ -1715,7 +1715,7 @@ class EnhancedDeviceAnalyzer:
             for protocol in protocols:
                 base_url = f"{protocol}://{ip}:{port}"
                 
-                # Farklı auth yöntemlerini dene
+                # Try different auth methods
                 auth_headers = [
                     {'Authorization': f'Bearer {token}'},
                     {'X-API-Key': token},
@@ -1724,7 +1724,7 @@ class EnhancedDeviceAnalyzer:
                 
                 for headers in auth_headers:
                     try:
-                        # API bilgi endpoint'lerini dene
+                        # Test API info endpoints
                         info_endpoints = ['/api/info', '/api/status', '/api/version', '/info', '/status']
                         
                         for endpoint in info_endpoints:
@@ -1743,37 +1743,37 @@ class EnhancedDeviceAnalyzer:
                                 except:
                                     analysis['data'][endpoint] = response.text[:500]
                         
-                        if analysis['endpoints']:  # Başarılıysa dur
+                        if analysis['endpoints']:  # Stop if successful
                             break
                             
                     except Exception as e:
                         continue
                 
-                if analysis['endpoints']:  # Başarılıysa diğer protokolü deneme
+                if analysis['endpoints']:  # Stop if successful
                     break
             
         except Exception as e:
-            analysis['error'] = f'API analiz hatası: {str(e)}'
+            analysis['error'] = f'API analysis error: {str(e)}'
         
         return analysis
     
     def _merge_system_info(self, analysis_result):
-        """Farklı kaynaklardan gelen sistem bilgilerini birleştir"""
+        """Merge system information from different sources"""
         system_info = {}
         
-        # SSH'dan sistem bilgisi
+        # System info from SSH
         if 'ssh' in analysis_result['access_methods']:
             ssh_data = analysis_result['access_methods']['ssh'].get('data', {})
             if 'system_info' in ssh_data:
                 system_info.update(ssh_data['system_info'])
         
-        # SNMP'den sistem bilgisi
+        # System info from SNMP
         if 'snmp' in analysis_result['access_methods']:
             snmp_data = analysis_result['access_methods']['snmp'].get('data', {})
             if 'system_info' in snmp_data:
                 system_info.update(snmp_data['system_info'])
         
-        # API'den sistem bilgisi
+        # System info from API
         if 'api' in analysis_result['access_methods']:
             api_data = analysis_result['access_methods']['api'].get('data', {})
             system_info['api_info'] = api_data
@@ -1781,16 +1781,16 @@ class EnhancedDeviceAnalyzer:
         analysis_result['system_info'] = system_info
     
     def _extract_title(self, html):
-        """HTML'den title çıkar"""
+        """Extract title from HTML"""
         import re
         match = re.search(r'<title[^>]*>([^<]+)</title>', html, re.IGNORECASE)
         return match.group(1).strip() if match else ''
     
     def _detect_technology(self, response):
-        """Response'dan teknoloji stack'ini tespit et"""
+        """Detect technology stack from response"""
         tech = []
         
-        # Header'lardan
+        # From headers
         server = response.headers.get('Server', '').lower()
         if 'nginx' in server:
             tech.append('Nginx')
@@ -1799,7 +1799,7 @@ class EnhancedDeviceAnalyzer:
         if 'flask' in server:
             tech.append('Flask')
         
-        # Content'ten
+        # From content
         content = response.text.lower()
         if 'react' in content:
             tech.append('React')

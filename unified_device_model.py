@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Unified Device Model - Ortak JSON schema ve data model
-Normal Tarama ve Gelişmiş Analiz için birleşik veri yapısı
+Unified Device Model - Common JSON schema and data model
+Unified data structure for Normal Scan and Enhanced Analysis
 """
 
 import json
@@ -11,7 +11,7 @@ from typing import Dict, List, Any, Optional
 
 class UnifiedDeviceModel:
     """
-    Unified Device Model - Tüm scan metodları için ortak veri modeli
+    Unified Device Model - Common data model for all scan methods
     """
     
     def __init__(self):
@@ -48,7 +48,7 @@ class UnifiedDeviceModel:
         }
     
     def create_unified_device(self, ip: str, mac: str, **kwargs) -> Dict[str, Any]:
-        """Unified device object oluştur"""
+        """Create unified device object"""
         device = self.unified_schema.copy()
         device.update({
             "ip": ip,
@@ -62,7 +62,7 @@ class UnifiedDeviceModel:
             }
         })
         
-        # Ek parametreleri ekle
+        # Add additional parameters
         for key, value in kwargs.items():
             if key in device:
                 device[key] = value
@@ -70,7 +70,7 @@ class UnifiedDeviceModel:
         return device
     
     def create_unified_port(self, port: int, **kwargs) -> Dict[str, Any]:
-        """Unified port object oluştur"""
+        """Create unified port object"""
         port_obj = {
             "port": port,
             "service": kwargs.get("service", "unknown"),
@@ -87,48 +87,48 @@ class UnifiedDeviceModel:
     def merge_device_data(self, existing_device: Dict[str, Any], new_device: Dict[str, Any], 
                          scan_type: str = "normal_scan") -> Dict[str, Any]:
         """
-        Mevcut cihaz verileri ile yeni tarama sonuçlarını birleştir
+        Merge existing device data with new scan results
         scan_type: "normal_scan" or "enhanced_analysis"
         """
         if not existing_device:
             return new_device
         
-        # MAC+IP kombinasyonu kontrol et
+        # Check MAC+IP combination
         existing_mac = existing_device.get('mac', '').lower()
         new_mac = new_device.get('mac', '').lower()
         existing_ip = existing_device.get('ip', '')
         new_ip = new_device.get('ip', '')
         
-        # MAC+IP kombinasyonu aynı olmalı merge için
+        # MAC+IP combination must be the same for merge
         if existing_mac != new_mac or existing_ip != new_ip:
-            print(f"⚠️ MAC+IP mismatch: {existing_mac}@{existing_ip} != {new_mac}@{new_ip} - farklı cihazlar, merge edilmiyor")
+            print(f"⚠️ MAC+IP mismatch: {existing_mac}@{existing_ip} != {new_mac}@{new_ip} - different devices, not merging")
             return new_device
         
         print(f"🔄 MAC+IP match: {existing_mac}@{existing_ip} - merging data")
         
-        # Temel bilgileri güncelle
+        # Update core information
         merged = existing_device.copy()
         
-        # Core fields'ı güncelle (IP ve MAC'i koruyarak)
+        # Update core fields (preserving IP and MAC)
         core_fields = ["hostname", "vendor", "status", "last_seen"]
         for field in core_fields:
             if field in new_device and new_device[field]:
                 merged[field] = new_device[field]
         
-        # User-defined fields'ı koru - Mevcut değerleri ÖNCELİKLE koru
+        # Preserve user-defined fields - Prefer existing values
         user_fields = ["alias", "notes", "device_type"]
         for field in user_fields:
             if field in existing_device and existing_device[field]:
-                # Mevcut değer varsa onu koru (kullanıcı tanımlı)
+                # If existing value, keep it (user-defined)
                 merged[field] = existing_device[field]
             elif field in new_device and new_device[field]:
-                # Mevcut değer yoksa yeni değeri kullan
+                # If no existing value, use new value
                 merged[field] = new_device[field]
             else:
-                # Her ikisinde de değer yoksa boş string
+                # If neither has value, set to empty string
                 merged[field] = ""
         
-        # Analysis data'yı güncelle
+        # Update analysis data
         if "analysis_data" not in merged:
             merged["analysis_data"] = {
                 "last_normal_scan": None,
@@ -137,7 +137,7 @@ class UnifiedDeviceModel:
                 "enhanced_analysis_info": {}
             }
         
-        # Scan type'a göre analysis data'yı güncelle
+        # Update analysis data by scan type
         if scan_type == "normal_scan":
             merged["analysis_data"]["last_normal_scan"] = datetime.now().isoformat()
             if "analysis_data" in new_device and "normal_scan_info" in new_device["analysis_data"]:
@@ -147,14 +147,14 @@ class UnifiedDeviceModel:
             if "analysis_data" in new_device and "enhanced_analysis_info" in new_device["analysis_data"]:
                 merged["analysis_data"]["enhanced_analysis_info"] = new_device["analysis_data"]["enhanced_analysis_info"]
         
-        # Port'ları birleştir
+        # Merge ports
         merged["open_ports"] = self.merge_ports(
             existing_device.get("open_ports", []),
             new_device.get("open_ports", []),
             scan_type
         )
         
-        # Encrypted credentials'ları koru (çok önemli!)
+        # Preserve encrypted credentials (very important!)
         if "encrypted_credentials" in existing_device:
             merged["encrypted_credentials"] = existing_device["encrypted_credentials"]
         
@@ -162,28 +162,28 @@ class UnifiedDeviceModel:
     
     def merge_ports(self, existing_ports: List[Dict], new_ports: List[Dict], 
                    scan_type: str) -> List[Dict]:
-        """Port listelerini birleştir"""
+        """Merge port lists"""
         merged_ports = {}
         
-        # Mevcut port'ları ekle
+        # Add existing ports
         for port in existing_ports:
             port_num = port.get("port")
             if port_num:
                 merged_ports[port_num] = port.copy()
         
-        # Yeni port'ları ekle/güncelle
+        # Add/update new ports
         for port in new_ports:
             port_num = port.get("port")
             if port_num:
                 if port_num in merged_ports:
-                    # Mevcut port'u güncelle
+                    # Update existing port
                     existing_port = merged_ports[port_num]
                     
-                    # Manuel port'ları koru
+                    # Preserve manual ports
                     if existing_port.get("manual", False):
                         continue
                     
-                    # Daha detaylı bilgiyi koru
+                    # Preserve more detailed information
                     if port.get("version") and not existing_port.get("version"):
                         existing_port["version"] = port["version"]
                     if port.get("product") and not existing_port.get("product"):
@@ -191,11 +191,11 @@ class UnifiedDeviceModel:
                     if port.get("description") and not existing_port.get("description"):
                         existing_port["description"] = port["description"]
                     
-                    # Source'u güncelle
+                    # Update source
                     existing_port["source"] = port.get("source", scan_type)
                     existing_port["last_verified"] = datetime.now().isoformat()
                 else:
-                    # Yeni port ekle
+                    # Add new port
                     new_port = port.copy()
                     new_port["source"] = port.get("source", scan_type)
                     new_port["last_verified"] = datetime.now().isoformat()
@@ -204,19 +204,19 @@ class UnifiedDeviceModel:
         return list(merged_ports.values())
     
     def migrate_legacy_data(self, legacy_device: Dict[str, Any]) -> Dict[str, Any]:
-        """Legacy format'tan unified format'a geçiş"""
+        """Migrate from legacy format to unified format"""
         unified_device = self.create_unified_device(
             legacy_device.get("ip", ""),
             legacy_device.get("mac", "")
         )
         
-        # Temel bilgileri kopyala
+        # Copy core information
         basic_fields = ["hostname", "vendor", "device_type", "status", "last_seen", "alias", "notes"]
         for field in basic_fields:
             if field in legacy_device:
                 unified_device[field] = legacy_device[field]
         
-        # Port'ları dönüştür
+        # Convert ports
         if "open_ports" in legacy_device:
             unified_ports = []
             for port in legacy_device["open_ports"]:
@@ -233,7 +233,7 @@ class UnifiedDeviceModel:
                 unified_ports.append(unified_port)
             unified_device["open_ports"] = unified_ports
         
-        # Legacy analysis data'yı migrate et
+        # Migrate legacy analysis data
         analysis_data = {
             "last_normal_scan": None,
             "last_enhanced_analysis": None,
@@ -241,24 +241,24 @@ class UnifiedDeviceModel:
             "enhanced_analysis_info": {}
         }
         
-        # Enhanced info'yu migrate et
+        # Migrate enhanced info
         if "enhanced_info" in legacy_device and legacy_device["enhanced_info"]:
             analysis_data["normal_scan_info"] = legacy_device["enhanced_info"]
             analysis_data["last_normal_scan"] = legacy_device.get("last_seen")
         
-        # Enhanced comprehensive info'yu migrate et
+        # Migrate enhanced comprehensive info
         if "enhanced_comprehensive_info" in legacy_device and legacy_device["enhanced_comprehensive_info"]:
             analysis_data["enhanced_analysis_info"] = legacy_device["enhanced_comprehensive_info"]
             analysis_data["last_enhanced_analysis"] = legacy_device.get("last_enhanced_analysis")
         
-        # Advanced scan summary'yi migrate et
+        # Migrate advanced scan summary
         if "advanced_scan_summary" in legacy_device and legacy_device["advanced_scan_summary"]:
             if not analysis_data["enhanced_analysis_info"]:
                 analysis_data["enhanced_analysis_info"] = legacy_device["advanced_scan_summary"]
         
         unified_device["analysis_data"] = analysis_data
         
-        # Backward compatibility için legacy field'ları koru
+        # For backward compatibility, preserve legacy fields
         unified_device["enhanced_info"] = legacy_device.get("enhanced_info")
         unified_device["enhanced_comprehensive_info"] = legacy_device.get("enhanced_comprehensive_info")
         unified_device["advanced_scan_summary"] = legacy_device.get("advanced_scan_summary")
@@ -267,14 +267,14 @@ class UnifiedDeviceModel:
         return unified_device
     
     def validate_device_schema(self, device: Dict[str, Any]) -> bool:
-        """Device schema'sını validate et"""
+        """Validate device schema"""
         required_fields = ["ip", "mac", "hostname", "vendor", "device_type", "open_ports", "analysis_data"]
         
         for field in required_fields:
             if field not in device:
                 return False
         
-        # Analysis data structure kontrolü
+        # Check analysis data structure
         if "analysis_data" in device:
             analysis_data = device["analysis_data"]
             required_analysis_fields = ["last_normal_scan", "last_enhanced_analysis", 
@@ -286,7 +286,7 @@ class UnifiedDeviceModel:
         return True
     
     def get_device_summary(self, device: Dict[str, Any]) -> Dict[str, Any]:
-        """Device özet bilgilerini döndür"""
+        """Return device summary information"""
         summary = {
             "ip": device.get("ip"),
             "alias": device.get("alias", ""),
