@@ -1,65 +1,64 @@
 // Enhanced Details Modal Management
-// Gelişmiş Analiz Detayları Modal Yönetimi
 
 let currentDevice = null;
 let currentTab = 'overview';
 
-// Enhanced Details Modal'ını açma fonksiyonu
+// Function to open Enhanced Details Modal
 function openEnhancedDetailsModal(device) {
     currentDevice = device;
     
-    // Enhanced info'ya sahip olup olmadığını kontrol et
+    // Check if device has enhanced info
     const hasEnhancedInfo = device.enhanced_comprehensive_info || 
                            device.advanced_scan_summary || 
                            device.enhanced_info;
     
     if (!hasEnhancedInfo) {
-        showToast('Bu cihaz için gelişmiş analiz bilgisi bulunamadı!', 'error');
+        showToast('No enhanced analysis information found for this device!', 'error');
         return;
     }
     
-    // Modal title'ı güncelle
+    // Update modal title
     document.getElementById('detailsDeviceTitle').innerHTML = 
-        `🔬 ${device.ip} - ${device.alias || device.hostname || 'Bilinmeyen Cihaz'}`;
+        `🔬 ${device.ip} - ${device.alias || device.hostname || 'Unknown Device'}`;
     
-    // Modal'ı göster
+    // Show modal
     document.getElementById('enhancedDetailsModal').style.display = 'block';
     
-    // İlk tab'ı aktif et
+    // Activate first tab
     switchDetailsTab('overview');
 }
 
-// Enhanced Details Modal'ını kapatma fonksiyonu
+// Function to close Enhanced Details Modal
 function closeEnhancedDetailsModal() {
     document.getElementById('enhancedDetailsModal').style.display = 'none';
     currentDevice = null;
     currentTab = 'overview';
 }
 
-// Tab geçiş fonksiyonu
+// Tab switch function
 function switchDetailsTab(tabName) {
     currentTab = tabName;
     
-    // Tüm tab butonlarının active class'ını kaldır
+    // Remove active class from all tab buttons
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.remove('active');
     });
     
-    // Aktif tab butonunu işaretle
+    // Mark active tab button
     event?.target?.classList.add('active') || 
     document.querySelector(`[onclick="switchDetailsTab('${tabName}')"]`)?.classList.add('active');
     
-    // İçeriği yükle
+    // Load content
     loadTabContent(tabName);
 }
 
-// Tab içeriğini yükleme fonksiyonu
+// Function to load tab content
 function loadTabContent(tabName) {
     if (!currentDevice) return;
     
     const contentDiv = document.getElementById('detailsContent');
     
-    // Enhanced info'yu al
+    // Get enhanced info
     const enhancedInfo = currentDevice.enhanced_comprehensive_info || 
                         currentDevice.advanced_scan_summary || 
                         currentDevice.enhanced_info || {};
@@ -89,13 +88,13 @@ function loadTabContent(tabName) {
             content = generateRawContent(enhancedInfo);
             break;
         default:
-            content = '<div class="details-no-data">Bilinmeyen tab</div>';
+            content = '<div class="details-no-data">Unknown tab</div>';
     }
     
     contentDiv.innerHTML = content;
 }
 
-// Genel Bakış içeriği
+// Overview content
 function generateOverviewContent(enhancedInfo, device) {
     const basicInfo = enhancedInfo.basic_info || {};
     const raspberryInfo = enhancedInfo.raspberry_pi_analysis || {};
@@ -103,28 +102,28 @@ function generateOverviewContent(enhancedInfo, device) {
     
     return `
         <div class="details-section">
-            <h4>📊 Cihaz Özeti</h4>
+            <h4>📊 Device Summary</h4>
             <div class="details-grid">
                 <div class="details-card">
-                    <h5>🔍 Temel Bilgiler</h5>
+                    <h5>🔍 Basic Information</h5>
                     <ul class="details-list">
-                        <li><span class="details-label">IP Adresi:</span><span class="details-value">${device.ip}</span></li>
-                        <li><span class="details-label">MAC Adresi:</span><span class="details-value">${device.mac}</span></li>
+                        <li><span class="details-label">IP Address:</span><span class="details-value">${device.ip}</span></li>
+                        <li><span class="details-label">MAC Address:</span><span class="details-value">${device.mac}</span></li>
                         <li><span class="details-label">Hostname:</span><span class="details-value">${device.hostname || 'N/A'}</span></li>
                         <li><span class="details-label">Alias:</span><span class="details-value">${device.alias || 'N/A'}</span></li>
                         <li><span class="details-label">Vendor:</span><span class="details-value">${device.vendor || 'N/A'}</span></li>
-                        <li><span class="details-label">Durum:</span><span class="details-value">
+                        <li><span class="details-label">Status:</span><span class="details-value">
                             <span class="status-badge status-${device.status}">${device.status}</span>
                         </span></li>
-                        <li><span class="details-label">Son Görülme:</span><span class="details-value">${formatDate(device.last_seen)}</span></li>
+                        <li><span class="details-label">Last Seen:</span><span class="details-value">${formatDate(device.last_seen)}</span></li>
                         ${device.last_enhanced_analysis ? 
-                            `<li><span class="details-label">Son Analiz:</span><span class="details-value">${formatDate(device.last_enhanced_analysis)}</span></li>` : ''
+                            `<li><span class="details-label">Last Analysis:</span><span class="details-value">${formatDate(device.last_enhanced_analysis)}</span></li>` : ''
                         }
                     </ul>
                 </div>
                 
                 <div class="details-card">
-                    <h5>🎯 Tespit Olasılıkları</h5>
+                    <h5>🎯 Detection Probabilities</h5>
                     ${generateDeviceTypeProbabilities(enhancedInfo)}
                 </div>
             </div>
@@ -134,7 +133,7 @@ function generateOverviewContent(enhancedInfo, device) {
     `;
 }
 
-// Ağ Servisleri içeriği
+// Network Services content
 function generateNetworkContent(enhancedInfo) {
     const webServices = enhancedInfo.web_services || {};
     const networkServices = enhancedInfo.network_services || {};
@@ -142,44 +141,44 @@ function generateNetworkContent(enhancedInfo) {
     
     return `
         <div class="details-section">
-            <h4>🌐 Web Servisleri</h4>
+            <h4>🌐 Web Services</h4>
             ${Object.keys(webServices).length > 0 ? 
                 generateWebServicesGrid(webServices) : 
-                '<div class="details-no-data">Web servisi bulunamadı</div>'
+                '<div class="details-no-data">No web services found</div>'
             }
         </div>
         
         <div class="details-section">
-            <h4>🔐 Uzaktan Erişim</h4>
+            <h4>🔐 Remote Access</h4>
             ${Object.keys(sshInfo).length > 0 ? 
                 generateSSHInfo(sshInfo) : 
-                '<div class="details-no-data">SSH bilgisi bulunamadı</div>'
+                '<div class="details-no-data">No SSH information found</div>'
             }
         </div>
         
         <div class="details-section">
-            <h4>📡 SNMP ve Diğer Servisler</h4>
+            <h4>📡 SNMP and Other Services</h4>
             ${Object.keys(networkServices).length > 0 ? 
                 generateNetworkServicesInfo(networkServices) : 
-                '<div class="details-no-data">Ağ servisi bilgisi bulunamadı</div>'
+                '<div class="details-no-data">No network service information found</div>'
             }
         </div>
     `;
 }
 
-// Port Analizi içeriği
+// Port Analysis content
 function generatePortsContent(enhancedInfo) {
     const detailedPorts = enhancedInfo.detailed_ports || {};
     
     if (detailedPorts.error) {
         return `
             <div class="details-section">
-                <h4>🔌 Port Tarama Hatası</h4>
+                <h4>🔌 Port Scan Error</h4>
                 <div class="vulnerability-item vulnerability-medium">
-                    <strong>⚠️ Hata:</strong> ${detailedPorts.error}
+                    <strong>⚠️ Error:</strong> ${detailedPorts.error}
                     <p style="margin-top: 10px; font-size: 14px;">
-                        Port taraması için root yetkileri gerekli olabilir. 
-                        Alternatif olarak temel port bilgileri cihaz listesinde mevcuttur.
+                        Root privileges may be required for port scanning. 
+                        Alternatively, basic port information is available in the device list.
                     </p>
                 </div>
             </div>
@@ -188,16 +187,16 @@ function generatePortsContent(enhancedInfo) {
     
     return `
         <div class="details-section">
-            <h4>🔌 Detaylı Port Analizi</h4>
+            <h4>🔌 Detailed Port Analysis</h4>
             ${Object.keys(detailedPorts).length > 0 ? 
                 generatePortsGrid(detailedPorts) : 
-                '<div class="details-no-data">Port bilgisi bulunamadı</div>'
+                '<div class="details-no-data">No port information found</div>'
             }
         </div>
     `;
 }
 
-// Sistem Bilgileri içeriği
+// System Information content
 function generateSystemContent(enhancedInfo) {
     const systemId = enhancedInfo.system_identification || {};
     const osDetection = systemId.os_detection || {};
@@ -205,70 +204,70 @@ function generateSystemContent(enhancedInfo) {
     
     return `
         <div class="details-section">
-            <h4>💻 İşletim Sistemi Tespiti</h4>
+            <h4>💻 OS Detection</h4>
             ${Object.keys(osDetection).length > 0 ? 
                 generateOSDetectionInfo(osDetection) : 
-                '<div class="details-no-data">İşletim sistemi bilgisi bulunamadı</div>'
+                '<div class="details-no-data">No OS information found</div>'
             }
         </div>
         
         <div class="details-section">
-            <h4>🖥️ SSH Sistem Bilgileri</h4>
+            <h4>🖥️ SSH System Information</h4>
             ${Object.keys(sshSystemInfo).length > 0 ? 
                 generateSSHSystemInfo(sshSystemInfo) : 
-                '<div class="details-no-data">SSH sistem bilgisi bulunamadı (Erişim bilgileri gerekli)</div>'
+                '<div class="details-no-data">No SSH system information found (Access credentials required)</div>'
             }
         </div>
     `;
 }
 
-// Güvenlik içeriği
+// Security content
 function generateSecurityContent(enhancedInfo) {
     const securityAnalysis = enhancedInfo.security_analysis || {};
     
     return `
         <div class="details-section">
-            <h4>🛡️ Güvenlik Analizi</h4>
+            <h4>🛡️ Security Analysis</h4>
             ${Object.keys(securityAnalysis).length > 0 ? 
                 generateSecurityAnalysisInfo(securityAnalysis) : 
-                '<div class="details-no-data">Güvenlik analizi bilgisi bulunamadı</div>'
+                '<div class="details-no-data">No security analysis information found</div>'
             }
         </div>
     `;
 }
 
-// Donanım içeriği
+// Hardware content
 function generateHardwareContent(enhancedInfo) {
     const raspberryInfo = enhancedInfo.raspberry_pi_analysis || {};
     const hardwareInfo = raspberryInfo.hardware || {};
     
     return `
         <div class="details-section">
-            <h4>🔧 Donanım Bilgileri</h4>
+            <h4>🔧 Hardware Information</h4>
             ${Object.keys(hardwareInfo).length > 0 ? 
                 generateHardwareInfo(hardwareInfo) : 
-                '<div class="details-no-data">Donanım bilgisi bulunamadı (SSH erişimi gerekli)</div>'
+                '<div class="details-no-data">No hardware information found (SSH access required)</div>'
             }
         </div>
         
         <div class="details-section">
-            <h4>🥧 Raspberry Pi Servisleri</h4>
+            <h4>🥧 Raspberry Pi Services</h4>
             ${generateRaspberryPiServices(raspberryInfo)}
         </div>
     `;
 }
 
-// Ham Veri içeriği
+// Raw Data content
 function generateRawContent(enhancedInfo) {
     return `
         <div class="details-section">
-            <h4>📄 Ham Veri (JSON)</h4>
+            <h4>📄 Raw Data (JSON)</h4>
             <div class="details-code">${JSON.stringify(enhancedInfo, null, 2)}</div>
         </div>
     `;
 }
 
-// Yardımcı fonksiyonlar
+// Helper functions
 function getProbabilityClass(probability) {
     if (probability >= 0.7) return 'probability-high';
     if (probability >= 0.3) return 'probability-medium';
@@ -278,7 +277,7 @@ function getProbabilityClass(probability) {
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleString('tr-TR');
+    return date.toLocaleString('en-US');
 }
 
 function generateQuickStats(enhancedInfo, device) {
@@ -288,18 +287,18 @@ function generateQuickStats(enhancedInfo, device) {
     
     return `
         <div class="details-section">
-            <h4>📈 Hızlı İstatistikler</h4>
+            <h4>📈 Quick Stats</h4>
             <div class="details-grid">
                 <div class="details-card" style="text-align: center;">
-                    <h5>🚪 Açık Portlar</h5>
+                    <h5>🚪 Open Ports</h5>
                     <div style="font-size: 32px; font-weight: bold; color: #28a745;">${openPorts}</div>
                 </div>
                 <div class="details-card" style="text-align: center;">
-                    <h5>🌐 Web Servisleri</h5>
+                    <h5>🌐 Web Services</h5>
                     <div style="font-size: 32px; font-weight: bold; color: #007bff;">${webServices}</div>
                 </div>
                 <div class="details-card" style="text-align: center;">
-                    <h5>🛡️ Güvenlik Kontrolü</h5>
+                    <h5>🛡️ Security Check</h5>
                     <div style="font-size: 32px; font-weight: bold; color: #ffc107;">${securityIssues}</div>
                 </div>
             </div>
@@ -316,7 +315,7 @@ function generateWebServicesGrid(webServices) {
                 <div class="details-card">
                     <h5>${service}</h5>
                     <div class="vulnerability-item vulnerability-medium">
-                        <strong>❌ Hata:</strong> ${data.error}
+                        <strong>❌ Error:</strong> ${data.error}
                     </div>
                 </div>
             `;
@@ -356,7 +355,7 @@ function generateSSHInfo(sshInfo) {
                 ${sshInfo.connection_test ? `
                     <li><span class="details-label">Connection Test:</span><span class="details-value">
                         <span class="status-badge ${sshInfo.connection_test.success ? 'status-online' : 'status-error'}">
-                            ${sshInfo.connection_test.success ? 'Başarılı' : 'Başarısız'}
+                            ${sshInfo.connection_test.success ? 'Successful' : 'Failed'}
                         </span>
                     </span></li>
                     ${sshInfo.connection_test.user ? `
@@ -447,14 +446,14 @@ function generateHardwareInfo(hardwareInfo) {
 
 function formatHardwareKey(key) {
     const keyMap = {
-        'cpu_info': '🖥️ CPU Bilgisi',
-        'memory': '💾 Bellek',
+        'cpu_info': '🖥️ CPU Information',
+        'memory': '💾 Memory',
         'disk': '💽 Disk',
-        'temperature': '🌡️ Sıcaklık',
+        'temperature': '🌡️ Temperature',
         'gpio': '🔌 GPIO',
         'os_release': '💻 OS Release',
         'kernel': '⚙️ Kernel',
-        'packages': '📦 Paketler'
+        'packages': '📦 Packages'
     };
     return keyMap[key] || key;
 }
@@ -480,7 +479,7 @@ function generateRaspberryPiServices(raspberryInfo) {
     }
     
     if (html === '<div class="details-grid">') {
-        return '<div class="details-no-data">Raspberry Pi servisi bulunamadı</div>';
+        return '<div class="details-no-data">No Raspberry Pi services found</div>';
     }
     
     html += '</div>';
@@ -496,7 +495,7 @@ function generateNetworkServicesInfo(networkServices) {
                 <h5>${service.toUpperCase()}</h5>
                 ${Object.keys(data).length > 0 ? 
                     `<div class="details-code">${JSON.stringify(data, null, 2)}</div>` :
-                    '<div class="details-no-data">Veri bulunamadı</div>'
+                    '<div class="details-no-data">No data found</div>'
                 }
             </div>
         `;
@@ -572,7 +571,7 @@ function generateOSDetectionInfo(osDetection) {
     }
     
     if (html === '<div class="details-grid">') {
-        html += '<div class="details-no-data">İşletim sistemi tespit edilemedi</div>';
+        html += '<div class="details-no-data">OS could not be detected</div>';
     }
     
     html += '</div>';
@@ -584,7 +583,7 @@ function generateDeviceTypeProbabilities(enhancedInfo) {
     const probabilities = deviceTypeAnalysis.device_probabilities || {};
     const indicators = deviceTypeAnalysis.indicators || {};
     
-    // Cihaz tipi simgeleri ve isimleri
+    // Device type icons and names
     const deviceTypes = {
         'camera': { icon: '📹', name: 'IP Camera' },
         'smart_tv': { icon: '📺', name: 'Smart TV' },
@@ -599,7 +598,7 @@ function generateDeviceTypeProbabilities(enhancedInfo) {
         'iot_device': { icon: '🔗', name: 'IoT Device' }
     };
     
-    // Fallback: Eğer yeni analiz yoksa eski verileri kullan
+    // Fallback: If no new analysis, use old data
     if (Object.keys(probabilities).length === 0) {
         const raspberryInfo = enhancedInfo.raspberry_pi_analysis || {};
         const iotInfo = enhancedInfo.iot_analysis || {};
@@ -670,10 +669,10 @@ function generateDeviceTypeProbabilities(enhancedInfo) {
     
     let html = '';
     
-    // Tüm cihaz tiplerini olasılık sırasına göre sırala
+    // Sort all device types by probability
     const sortedTypes = Object.entries(probabilities)
         .sort(([,a], [,b]) => b - a)
-        .slice(0, 6); // En yüksek 6 tanesini göster
+        .slice(0, 6); // Show top 6
     
     for (const [deviceType, probability] of sortedTypes) {
         const typeInfo = deviceTypes[deviceType];
@@ -706,16 +705,16 @@ function generateDeviceTypeProbabilities(enhancedInfo) {
         `;
     }
     
-    // Eğer hiç sonuç yoksa
+    // If no results
     if (html === '') {
-        html = '<div style="color: #666; font-style: italic;">Cihaz tipi analizi yapılmadı</div>';
+        html = '<div style="color: #666; font-style: italic;">No device type analysis performed</div>';
     }
     
     return html;
 }
 
 function formatIndicator(indicator) {
-    // Gösterge isimlerini daha okunaklı hale getir
+    // Make indicator names more readable
     const indicatorMap = {
         'camera_hostname': 'Camera Hostname',
         'rtsp_service': 'RTSP Service',
@@ -743,7 +742,7 @@ function formatIndicator(indicator) {
     return indicatorMap[indicator] || indicator;
 }
 
-// Modal dışına tıklandığında kapat
+// Close modal when clicking outside
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('enhancedDetailsModal');
     if (event.target === modal) {
@@ -751,7 +750,7 @@ window.addEventListener('click', function(event) {
     }
 });
 
-// Klavye kısayolları
+// Keyboard shortcuts
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape' && document.getElementById('enhancedDetailsModal').style.display === 'block') {
         closeEnhancedDetailsModal();

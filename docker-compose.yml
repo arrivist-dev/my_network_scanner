@@ -1,7 +1,7 @@
 services:
   my-network-scanner:
     build: .
-    image: fxerkan/my_network_scanner:latest
+    image: arrivist/my_network_scanner:latest
     container_name: my-network-scanner
     ports:
       - "5883:5883"

@@ -1,31 +1,31 @@
-// Device Access Management - Cihaz Erişim Yönetimi
+// Device Access Management
 
 let currentAccessDevice = null;
 
-// Modal açma fonksiyonu
+// Modal open function
 function openDeviceAccessModal(ip) {
     currentAccessDevice = ip;
     document.getElementById('accessDeviceIP').value = ip;
     document.getElementById('deviceAccessModal').style.display = 'block';
     
-    // Mevcut erişim bilgilerini yükle
+    // Load existing access info
     loadExistingAccessInfo(ip);
     updateAccessForm();
 }
 
-// Modal kapatma fonksiyonu
+// Modal close function
 function closeDeviceAccessModal() {
     document.getElementById('deviceAccessModal').style.display = 'none';
     currentAccessDevice = null;
     clearAccessForm();
 }
 
-// Erişim türüne göre formu güncelle
+// Update form based on access type
 function updateAccessForm() {
     const accessType = document.getElementById('accessType').value;
     const hintsDiv = document.getElementById('accessHints');
     
-    // Port'u otomatik ayarla
+    // Auto set port
     const portField = document.getElementById('accessPort');
     const defaultPorts = {
         'ssh': 22,
@@ -42,52 +42,52 @@ function updateAccessForm() {
         portField.value = '';
     }
     
-    // Hint'leri güncelle
+    // Update hints
     const hints = {
         'ssh': `
             <div class="hint">
-                <strong>SSH:</strong> Linux/Unix sistemler için. 
-                <br>• Raspberry Pi: kullanıcı <code>pi</code>, port <code>22</code>
-                <br>• Ubuntu/Debian: kullanıcı <code>ubuntu</code> veya <code>admin</code>
-                <br>• Router'lar: kullanıcı <code>admin</code> veya <code>root</code>
+                <strong>SSH:</strong> For Linux/Unix systems.
+                <br>• Raspberry Pi: user <code>pi</code>, port <code>22</code>
+                <br>• Ubuntu/Debian: user <code>ubuntu</code> or <code>admin</code>
+                <br>• Routers: user <code>admin</code> or <code>root</code>
             </div>
         `,
         'ftp': `
             <div class="hint">
-                <strong>FTP:</strong> Dosya transferi için.
-                <br>• Anonymous erişim: kullanıcı <code>anonymous</code>, şifre boş
-                <br>• NAS cihazları: genellikle <code>admin</code> veya <code>guest</code>
+                <strong>FTP:</strong> For file transfer.
+                <br>• Anonymous access: user <code>anonymous</code>, empty password
+                <br>• NAS devices: usually <code>admin</code> or <code>guest</code>
             </div>
         `,
         'telnet': `
             <div class="hint">
-                <strong>Telnet:</strong> Eski cihazlar ve router'lar için.
-                <br>• Router'lar: <code>admin/admin</code>, <code>root/admin</code>
-                <br>⚠️ Güvenli değil, SSH tercih edin
+                <strong>Telnet:</strong> For legacy devices and routers.
+                <br>• Routers: <code>admin/admin</code>, <code>root/admin</code>
+                <br>⚠️ Not secure, prefer SSH
             </div>
         `,
         'http': `
             <div class="hint">
-                <strong>HTTP Auth:</strong> Web arayüzü erişimi için.
-                <br>• Router'lar: <code>admin/admin</code>, <code>admin/password</code>
-                <br>• IP Kameralar: <code>admin/admin</code>, <code>admin/123456</code>
-                <br>• IoT Cihazlar: <code>admin</code> veya cihaz modeline özel
+                <strong>HTTP Auth:</strong> For web interface access.
+                <br>• Routers: <code>admin/admin</code>, <code>admin/password</code>
+                <br>• IP Cameras: <code>admin/admin</code>, <code>admin/123456</code>
+                <br>• IoT Devices: <code>admin</code> or device-specific
             </div>
         `,
         'snmp': `
             <div class="hint">
-                <strong>SNMP:</strong> Sistem izleme için.
-                <br>• Community String: genellikle <code>public</code> (kullanıcı adı alanına)
-                <br>• SNMP v3 için kullanıcı adı ve parola gerekli
-                <br>• Port: genellikle <code>161</code>
+                <strong>SNMP:</strong> For system monitoring.
+                <br>• Community String: usually <code>public</code> (enter in username field)
+                <br>• For SNMP v3, username and password required
+                <br>• Port: usually <code>161</code>
             </div>
         `,
         'api': `
             <div class="hint">
-                <strong>API Token:</strong> REST API erişimi için.
-                <br>• Token'ı Parola alanına girin
-                <br>• Kullanıcı adı genellikle gerekli değil
-                <br>• Ek Bilgiler'e API endpoint'lerini ekleyin
+                <strong>API Token:</strong> For REST API access.
+                <br>• Enter token in the Password field
+                <br>• Username usually not required
+                <br>• Add API endpoints to Additional Info
             </div>
         `
     };
@@ -95,7 +95,7 @@ function updateAccessForm() {
     hintsDiv.innerHTML = hints[accessType] || '';
 }
 
-// Formu temizle
+// Clear form
 function clearAccessForm() {
     document.getElementById('accessUsername').value = '';
     document.getElementById('accessPassword').value = '';
@@ -104,7 +104,7 @@ function clearAccessForm() {
     document.getElementById('accessType').value = 'ssh';
 }
 
-// Mevcut erişim bilgilerini yükle
+// Load existing access info
 async function loadExistingAccessInfo(ip) {
     try {
         console.log(`Loading existing access info for ${ip}`);
@@ -116,21 +116,21 @@ async function loadExistingAccessInfo(ip) {
             console.log(`Access info received:`, accessInfo);
             
             if (accessInfo && Object.keys(accessInfo).length > 0) {
-                // İlk erişim türünü yükle
+                // Load first access type
                 const firstType = Object.keys(accessInfo)[0];
                 const firstAccess = accessInfo[firstType];
                 
                 document.getElementById('accessType').value = firstType;
                 document.getElementById('accessUsername').value = firstAccess.username || '';
                 
-                // Şifreyi gizle - eğer var ise placeholder göster
+                // Hide password - show placeholder if exists
                 const passwordField = document.getElementById('accessPassword');
                 if (firstAccess.has_password) {
                     passwordField.placeholder = '••••••••';
                     passwordField.value = '';
                     passwordField.setAttribute('data-has-existing', 'true');
                 } else {
-                    passwordField.placeholder = 'Şifre girin';
+                    passwordField.placeholder = 'Enter password';
                     passwordField.value = '';
                     passwordField.removeAttribute('data-has-existing');
                 }
@@ -143,14 +143,14 @@ async function loadExistingAccessInfo(ip) {
             }
         }
     } catch (error) {
-        console.error('Erişim bilgileri yüklenirken hata:', error);
+        console.error('Error loading access info:', error);
     }
 }
 
-// Cihaz erişim bilgilerini kaydet
+// Save device access info
 async function saveDeviceAccess() {
     if (!currentAccessDevice) {
-        showToast('Geçersiz cihaz!', 'error');
+        showToast('Invalid device!', 'error');
         return;
     }
     
@@ -165,7 +165,7 @@ async function saveDeviceAccess() {
         additional_info: {}
     };
     
-    // Eğer şifre alanı boş ve mevcut şifre varsa, şifreyi güncellememe
+    // If password field is empty and there is an existing password, do not update password
     if (!passwordField.value && passwordField.getAttribute('data-has-existing') === 'true') {
         accessData.keep_existing_password = true;
         console.log('Keeping existing password');
@@ -173,7 +173,7 @@ async function saveDeviceAccess() {
     
     console.log('Access data to save:', { ...accessData, password: accessData.password ? '***HIDDEN***' : 'EMPTY' });
     
-    // Ek bilgileri parse et
+    // Parse additional info
     const notes = document.getElementById('accessNotes').value.trim();
     if (notes) {
         try {
@@ -198,22 +198,22 @@ async function saveDeviceAccess() {
         console.log('Save response result:', result);
         
         if (response.ok) {
-            showToast('Erişim bilgileri kaydedildi!', 'success');
+            showToast('Access information saved!', 'success');
             console.log('Credentials saved successfully');
         } else {
             console.error('Save error:', result.error);
-            showToast(`Kayıt hatası: ${result.error}`, 'error');
+            showToast(`Save error: ${result.error}`, 'error');
         }
     } catch (error) {
         console.error('Save connection error:', error);
-        showToast(`Bağlantı hatası: ${error.message}`, 'error');
+        showToast(`Connection error: ${error.message}`, 'error');
     }
 }
 
-// Erişim testi
+// Test device access
 async function testDeviceAccess() {
     if (!currentAccessDevice) {
-        showToast('Geçersiz cihaz!', 'error');
+        showToast('Invalid device!', 'error');
         return;
     }
     
@@ -225,7 +225,7 @@ async function testDeviceAccess() {
         port: document.getElementById('accessPort').value || null
     };
     
-    // Eğer şifre alanı boş ve mevcut şifre varsa, kayıtlı credential'ları kullan
+    // If password field is empty and there is an existing password, use stored credentials
     if (!passwordField.value && passwordField.getAttribute('data-has-existing') === 'true') {
         accessData.use_stored_credentials = true;
         console.log('Using stored credentials for test');
@@ -233,11 +233,11 @@ async function testDeviceAccess() {
     
     console.log('Test access data:', { ...accessData, password: accessData.password ? '***HIDDEN***' : 'EMPTY' });
     
-    // Test butonunu devre dışı bırak
+    // Disable test button
     const testBtn = event.target;
     const originalText = testBtn.innerHTML;
     testBtn.disabled = true;
-    testBtn.innerHTML = '🔄 Test ediliyor...';
+    testBtn.innerHTML = '🔄 Testing...';
     
     try {
         console.log('Sending test request...');
@@ -256,78 +256,78 @@ async function testDeviceAccess() {
         if (response.ok) {
             if (result.success) {
                 console.log('Test successful:', result);
-                showToast(`✅ Erişim başarılı! ${result.details || ''}`, 'success');
+                showToast(`✅ Access successful! ${result.details || ''}`, 'success');
             } else {
                 console.error('Test failed:', result.error);
-                showToast(`❌ Erişim başarısız: ${result.error}`, 'error');
+                showToast(`❌ Access failed: ${result.error}`, 'error');
             }
         } else {
             console.error('Test error response:', result.error);
-            showToast(`Test hatası: ${result.error}`, 'error');
+            showToast(`Test error: ${result.error}`, 'error');
         }
     } catch (error) {
         console.error('Test connection error:', error);
-        showToast(`Bağlantı hatası: ${error.message}`, 'error');
+        showToast(`Connection error: ${error.message}`, 'error');
     } finally {
-        // Test butonunu tekrar aktif et
+        // Re-enable test button
         testBtn.disabled = false;
         testBtn.innerHTML = originalText;
     }
 }
 
-// Gelişmiş analiz çalıştır - artık Detaylı Cihaz Analizi sayfasını açar
+// Run enhanced analysis - now opens Detailed Device Analysis page
 async function runEnhancedAnalysis() {
     if (!currentAccessDevice) {
-        showToast('Geçersiz cihaz!', 'error');
+        showToast('Invalid device!', 'error');
         return;
     }
     
-    // IP'yi kaydet (modal kapanmadan önce)
+    // Save IP (before closing modal)
     const deviceIP = currentAccessDevice;
     
-    // Önce erişim bilgilerini kaydet
+    // Save access info first
     await saveDeviceAccess();
     
-    showToast('Erişim bilgileri kaydedildi! Detaylı Cihaz Analizi sayfası açılıyor...', 'success');
+    showToast('Access information saved! Opening Detailed Device Analysis page...', 'success');
     
-    // Modal'ı kapat
+    // Close modal
     closeDeviceAccessModal();
     
-    // Detaylı Cihaz Analizi sayfasını açmak için kaydedilen IP'yi kullan
+    // Use saved IP to open Detailed Device Analysis page
     openSingleDeviceAnalysisPage(deviceIP);
 }
 
-// Detaylı Cihaz Analizi sayfasını aç
+// Open Detailed Device Analysis page
 function openSingleDeviceAnalysisPage(ip) {
-    // Yeni bir sayfa oluştur veya mevcut sayfada göster
+    // Create a new page or show in current page
     const analysisUrl = `/single_device_analysis/${ip}`;
     
-    // Eğer single device analysis sayfası mevcut değilse, modal olarak göster
+    // If single device analysis page does not exist, show as modal
     showSingleDeviceAnalysisModal(ip);
 }
 
-// Global değişkenler - çoklu analiz desteği
+// Global variables - multi-analysis support
 let activeAnalysisSessions = new Map(); // IP -> {isMinimized, type, toasterId}
-let analysisToasters = new Map(); // Minimize edilmiş analiz toaster'ları
-let isAnalysisMinimized = false; // Analysis modal minimize durumu
+let analysisToasters = new Map(); // Minimized analysis toasters
+let isAnalysisMinimized = false; // Analysis modal minimized state
 let analysisToasterCount = 0;
 
-// Unified modal'dan bulk analysis başlat
+// Unified modal to start bulk analysis
 async function startUnifiedBulkAnalysis(sessionKey) {
     window.unifiedAnalysisMode = true;
     
-    // UI durumunu güncelle
+    // Update UI state
     updateUnifiedAnalysisButtons(sessionKey, true);
     
     try {
-        // main.js'deki fonksiyonu çağır
+        // Call function from main.js
         await startBulkAnalysisActual();
     } catch (error) {
         updateUnifiedAnalysisButtons(sessionKey, false);
     }
 }
 
-// Unified modal buton durumlarını güncelle
+// Update Unified modal button states
 function updateUnifiedAnalysisButtons(sessionKey, isRunning) {
     const startBtn = document.getElementById(`startBtn_${sessionKey}`);
     const stopBtn = document.getElementById(`stopBtn_${sessionKey}`);
@@ -346,35 +346,35 @@ function updateUnifiedAnalysisButtons(sessionKey, isRunning) {
         minimizeBtn.style.display = isRunning ? 'inline-block' : 'none';
     }
     
-    // Progress bölümünü göster/gizle
+    // Show/hide progress section
     const progressDiv = document.getElementById('analysisProgress');
     if (progressDiv) {
         progressDiv.style.display = isRunning ? 'block' : 'none';
     }
     
-    // Verbose logs bölümünü göster
+    // Show verbose logs section
     const verboseSection = document.getElementById('verboseLogsSection');
     if (verboseSection && isRunning) {
         verboseSection.style.display = 'block';
     }
 }
 
-// Birleşik Gelişmiş Analiz modal'ını göster
+// Show Unified Advanced Analysis modal
 function showSingleDeviceAnalysisModal(ip) {
     showUnifiedAnalysisModal(ip, 'single');
 }
 
-// Toplu analiz için birleşik modal'ı göster
+// Show bulk analysis Unified modal
 function showBulkAnalysisModal() {
     showUnifiedAnalysisModal(null, 'bulk');
 }
 
-// Birleşik Gelişmiş Analiz Modal'ı
+// Unified Advanced Analysis Modal
 function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
-    // Çoklu oturum desteği
+    // Multi-session support
     const sessionKey = analysisType === 'bulk' ? 'bulk' : targetIP;
     
-    // Eğer zaten aktif bir analiz varsa, o modal'ı göster
+    // If an analysis is already active, show that modal
     if (activeAnalysisSessions.has(sessionKey)) {
         const session = activeAnalysisSessions.get(sessionKey);
         if (session.isMinimized) {
@@ -384,19 +384,19 @@ function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
     }
     
     const isSingleDevice = analysisType === 'single';
-    const title = isSingleDevice ? `🔬 Gelişmiş Analiz - ${targetIP}` : '🔬 Toplu Gelişmiş Analiz';
-    const buttonText = isSingleDevice ? '🚀 Gelişmiş Analizi Başlat' : '🚀 Toplu Gelişmiş Analizi Başlat';
+    const title = isSingleDevice ? `🔬 Advanced Analysis - ${targetIP}` : '🔬 Bulk Advanced Analysis';
+    const buttonText = isSingleDevice ? '🚀 Start Advanced Analysis' : '🚀 Start Bulk Advanced Analysis';
     const startFunction = isSingleDevice ? `startSingleDeviceAnalysis('${targetIP}')` : `startUnifiedBulkAnalysis('${sessionKey}')`;
     
-    // Açıklama metni
+    // Description text
     const descriptionText = isSingleDevice ? 
-        `Bu analiz ${targetIP} cihazında kapsamlı bir inceleme yapar. Erişim bilgileri varsa SSH, FTP, HTTP ve SNMP protokolleri üzerinden detaylı sistem bilgileri toplar.` :
-        'Bu analiz tüm ağdaki cihazlarda gelişmiş tarama ve analiz işlemleri gerçekleştirir. Her cihaz için mevcut erişim bilgileri kullanılarak kapsamlı bilgi toplama yapar.';
+        `This analysis performs a comprehensive review on the device ${targetIP}. If access information is available, it collects detailed system information via SSH, FTP, HTTP, and SNMP protocols.` :
+        'This analysis performs advanced scanning and analysis on all devices in the network. It collects comprehensive information for each device using available access information.';
     
-    // Benzersiz modal ID'si oluştur
+    // Unique modal ID
     const modalId = `unifiedAnalysisModal_${sessionKey.replace(/\./g, '_')}`;
     
-    // Session'ı kaydet
+    // Save session
     activeAnalysisSessions.set(sessionKey, {
         isMinimized: false,
         type: analysisType,
@@ -404,7 +404,7 @@ function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
         targetIP: targetIP
     });
     
-    // Modal oluştur
+    // Create modal
     const modalHtml = `
         <div id="${modalId}" class="modal" style="display: block;">
             <div class="modal-content" style="width: 95%; max-width: 1400px; max-height: 90vh; overflow-y: auto;">
@@ -415,18 +415,18 @@ function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
                     </div>
                 </div>
                 <div class="modal-body">
-                    <!-- Açıklama Bölümü -->
+                    <!-- Description Section -->
                     <div class="analysis-description" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #007bff;">
-                        <h4 style="margin: 0 0 10px 0; color: #007bff;">📋 Gelişmiş Analiz Hakkında</h4>
+                        <h4 style="margin: 0 0 10px 0; color: #007bff;">📋 About Advanced Analysis</h4>
                         <p style="margin: 0; color: #6c757d; line-height: 1.5;">${descriptionText}</p>
                         <div style="margin-top: 10px; font-size: 0.9em;">
-                            <strong>Yapılacak İşlemler:</strong>
+                            <strong>Actions to be performed:</strong>
                             <ul style="margin: 5px 0 0 20px; color: #6c757d;">
-                                <li>🔍 Port tarama ve servis tespiti</li>
-                                <li>🔐 Erişim bilgileri ile sistem analizi</li>
-                                <li>💻 Donanım ve yazılım bilgisi toplama</li>
-                                <li>🛡️ Güvenlik durumu değerlendirmesi</li>
-                                <li>📊 Kapsamlı rapor oluşturma</li>
+                                <li>🔍 Port scanning and service detection</li>
+                                <li>🔐 System analysis with access information</li>
+                                <li>💻 Hardware and software information collection</li>
+                                <li>🛡️ Security status assessment</li>
+                                <li>📊 Comprehensive report generation</li>
                             </ul>
                         </div>
                     </div>
@@ -438,7 +438,7 @@ function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
                             </button>
                             <button id="stopBtn_${sessionKey.replace(/\./g, '_')}" onclick="stopAnalysis('${sessionKey}')" 
                                 class="btn btn-danger" style="display: none; margin-left: 10px;">
-                                🛑 Analizi Durdur
+                                🛑 Stop Analysis
                             </button>
                             <button id="minimizeBtn_${sessionKey.replace(/\./g, '_')}" onclick="minimizeAnalysisModal('${sessionKey}')" 
                                 class="btn btn-secondary" style="display: none; margin-left: 10px;">
@@ -448,7 +448,7 @@ function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
                                 <div class="progress-bar" style="background: #e9ecef; height: 25px; border-radius: 5px; overflow: hidden;">
                                     <div id="progressBar" style="width: 0%; background: linear-gradient(90deg, #007bff, #0056b3); height: 100%; transition: width 0.5s; color: white; text-align: center; line-height: 25px; font-weight: bold;"></div>
                                 </div>
-                                <div id="progressText" style="margin-top: 10px; font-weight: bold;">Analiz başlatılıyor...</div>
+                                <div id="progressText" style="margin-top: 10px; font-weight: bold;">Analysis starting...</div>
                             </div>
                         </div>
                         
@@ -456,16 +456,16 @@ function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
                         <div class="verbose-logs-section" id="verboseLogsSection" style="display: none; margin-top: 20px;">
                             <div style="border: 1px solid #ddd; border-radius: 5px; background: #f8f9fa;">
                                 <div style="background: #e9ecef; padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">
-                                    📝 Detaylı Analiz Logları (Real-time)
+                                    📝 Detailed Analysis Logs (Real-time)
                                 </div>
                                 <div id="verboseLogs" style="height: 300px; overflow-y: auto; padding: 10px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.4; background: #fff;">
-                                    <!-- Verbose loglar buraya gelecek -->
+                                    <!-- Verbose logs will appear here -->
                                 </div>
                             </div>
                         </div>
                         
                         <div class="analysis-results" id="analysisResults" style="display: none; margin-top: 20px;">
-                            <h3>Analiz Sonuçları</h3>
+                            <h3>Analysis Results</h3>
                             <div id="analysisResultsContent"></div>
                         </div>
                     </div>
@@ -474,11 +474,11 @@ function showUnifiedAnalysisModal(targetIP = null, analysisType = 'single') {
         </div>
     `;
     
-    // Modal'ı sayfaya ekle
+    // Add modal to page
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-// Modal kapama işlemini yönet (aktif analiz varsa minimize et)
+// Handle modal close (minimize if active analysis exists)
 function handleModalClose(sessionKey) {
     const session = activeAnalysisSessions.get(sessionKey);
     if (!session) {
@@ -486,46 +486,46 @@ function handleModalClose(sessionKey) {
         return;
     }
     
-    // Analiz durumunu kontrol et
+    // Check analysis state
     const modal = document.getElementById(session.modalId);
     if (!modal) {
         closeUnifiedAnalysisModal(sessionKey);
         return;
     }
     
-    // Progress gösteriliyor mu kontrol et
+    // Check if progress is shown
     const progressDiv = modal.querySelector('#analysisProgress');
     const isAnalysisActive = progressDiv && progressDiv.style.display !== 'none';
     
     if (isAnalysisActive) {
-        // Aktif analiz varsa minimize et
+        // Minimize if active analysis exists
         minimizeAnalysisModal(sessionKey);
     } else {
-        // Analiz yoksa normal kapat
+        // Close normally if no analysis
         closeUnifiedAnalysisModal(sessionKey);
     }
 }
 
-// Birleşik Analiz modal'ını kapat (geriye dönük uyumluluk için de fonksiyon)
+// Close Unified Analysis modal (backward compatibility)
 function closeSingleDeviceAnalysisModal() {
-    // Eski sistem için fallback
+    // Fallback for old system
     const oldModal = document.getElementById('singleDeviceAnalysisModal');
     if (oldModal) {
         oldModal.remove();
         return;
     }
     
-    // Yeni sistem - ilk session'ı kapat
+    // New system - close first session
     if (activeAnalysisSessions.size > 0) {
         const firstKey = activeAnalysisSessions.keys().next().value;
         closeUnifiedAnalysisModal(firstKey);
     }
 }
 
-// Birleşik Analiz modal'ını kapat
+// Close Unified Analysis modal
 function closeUnifiedAnalysisModal(sessionKey) {
     if (!sessionKey) {
-        // Eski sistem fallback
+        // Fallback for old system
         const modal = document.getElementById('unifiedAnalysisModal') || document.getElementById('singleDeviceAnalysisModal');
         if (modal) {
             modal.remove();
@@ -541,20 +541,20 @@ function closeUnifiedAnalysisModal(sessionKey) {
         modal.remove();
     }
     
-    // İlgili toaster'ı temizle
+    // Clear related toaster
     const toaster = document.getElementById(`analysisToaster_${sessionKey.replace(/\./g, '_')}`);
     if (toaster) {
         toaster.remove();
     }
     
-    // Session'ı sil
+    // Delete session
     activeAnalysisSessions.delete(sessionKey);
 }
 
-// Modal'ı minimize et
+// Minimize modal
 function minimizeAnalysisModal(sessionKey) {
     if (!sessionKey) {
-        // Eski sistem fallback
+        // Fallback for old system
         const modal = document.getElementById('unifiedAnalysisModal') || document.getElementById('singleDeviceAnalysisModal');
         if (modal) {
             modal.style.display = 'none';
@@ -575,10 +575,10 @@ function minimizeAnalysisModal(sessionKey) {
     }
 }
 
-// Modal'ı maximize et
+// Maximize modal
 function maximizeAnalysisModal(sessionKey) {
     if (!sessionKey) {
-        // Eski sistem fallback
+        // Fallback for old system
         const modal = document.getElementById('unifiedAnalysisModal') || document.getElementById('singleDeviceAnalysisModal');
         const toaster = document.getElementById('analysisToaster');
         
@@ -594,7 +594,7 @@ function maximizeAnalysisModal(sessionKey) {
     
     const session = activeAnalysisSessions.get(sessionKey);
     if (!session) {
-        // Session yoksa yeniden oluştur
+        // Recreate if session does not exist
         restoreSessionFromServer(sessionKey);
         return;
     }
@@ -607,24 +607,24 @@ function maximizeAnalysisModal(sessionKey) {
         session.isMinimized = false;
         isAnalysisMinimized = false;
         
-        // Eğer analiz devam ediyorsa, UI durumunu restore et
+        // Restore UI state if analysis is active
         if (typeof bulkAnalysisRunning !== 'undefined' && bulkAnalysisRunning) {
             updateUnifiedAnalysisButtons(sessionKey, true);
             
-            // Verbose logs bölümünü göster
+            // Show verbose logs section
             const verboseSection = document.getElementById('verboseLogsSection');
             if (verboseSection) {
                 verboseSection.style.display = 'block';
             }
         } else if (sessionKey === 'bulk') {
-            // Bulk analiz için server durumunu kontrol et
+            // Check server state for bulk analysis
             checkBulkAnalysisStatusAndRestoreUI(sessionKey);
         }
         
-        // Temp dosyasından analiz sonuçlarını yükle
+        // Load analysis results from temp file
         loadAnalysisFromTemp(sessionKey);
         
-        // Modal butonlarını aktif analiz durumuna göre güncelle
+        // Update modal buttons based on active analysis state
         updateModalButtonsForActiveAnalysis(sessionKey);
     }
     
@@ -633,7 +633,7 @@ function maximizeAnalysisModal(sessionKey) {
     }
 }
 
-// Server'dan session'ı restore et
+// Restore session from server
 async function restoreSessionFromServer(sessionKey) {
     try {
         const response = await fetch('/get_active_analyses');
@@ -648,7 +648,7 @@ async function restoreSessionFromServer(sessionKey) {
                 await restoreBulkAnalysis(analysisInfo);
             }
             
-            // Modal'ı göster
+            // Show modal
             const session = activeAnalysisSessions.get(sessionKey);
             if (session) {
                 const modal = document.getElementById(session.modalId);
@@ -659,12 +659,12 @@ async function restoreSessionFromServer(sessionKey) {
             }
         }
     } catch (error) {
-        console.error('Session restore hatası:', error);
-        showToast('❌ Analiz session restore edilemedi', 'error');
+        console.error('Session restore error:', error);
+        showToast('❌ Failed to restore analysis session', 'error');
     }
 }
 
-// Temp dosyasından analiz sonuçlarını yükle
+// Load analysis results from temp file
 async function loadAnalysisFromTemp(sessionKey) {
     try {
         const response = await fetch(`/load_analysis_temp/${sessionKey}`);
@@ -680,7 +680,7 @@ async function loadAnalysisFromTemp(sessionKey) {
                     resultsDiv.innerHTML = tempData.analysis_results;
                 }
                 
-                // Progress güncelle
+                // Update progress
                 if (tempData.progress !== undefined) {
                     const progressBar = modal.querySelector('.progress-bar-fill');
                     const progressText = modal.querySelector('.progress-text');
@@ -696,11 +696,11 @@ async function loadAnalysisFromTemp(sessionKey) {
             }
         }
     } catch (error) {
-        console.warn('Temp dosya yükleme hatası:', error);
+        console.warn('Temp file load error:', error);
     }
 }
 
-// Modal butonlarını aktif analiz durumuna göre güncelle
+// Update modal buttons based on active analysis state
 async function updateModalButtonsForActiveAnalysis(sessionKey) {
     try {
         const response = await fetch('/get_active_analyses');
@@ -713,13 +713,13 @@ async function updateModalButtonsForActiveAnalysis(sessionKey) {
         const modal = document.getElementById(session.modalId);
         if (!modal) return;
         
-        // Butonları bul
+        // Find buttons
         const startBtn = modal.querySelector('[onclick*="startSingleDeviceAnalysis"], [onclick*="startBulkAnalysis"]');
         const stopBtn = modal.querySelector('[onclick*="stopAnalysis"]');
         const minimizeBtn = modal.querySelector(`#minimizeBtn_${sessionKey.replace(/\./g, '_')}`);
         
         if (isActive) {
-            // Aktif analiz varsa
+            // If analysis is active
             if (startBtn) {
                 startBtn.disabled = true;
                 startBtn.style.opacity = '0.5';
@@ -738,7 +738,7 @@ async function updateModalButtonsForActiveAnalysis(sessionKey) {
                 minimizeBtn.style.display = 'inline-block';
             }
         } else {
-            // Aktif analiz yoksa
+            // If no active analysis
             if (startBtn) {
                 startBtn.disabled = false;
                 startBtn.style.opacity = '1';
@@ -754,14 +754,14 @@ async function updateModalButtonsForActiveAnalysis(sessionKey) {
             }
         }
     } catch (error) {
-        console.error('Buton güncelleme hatası:', error);
+        console.error('Button update error:', error);
     }
 }
 
-// Analiz toaster'ını göster
+// Show analysis toaster
 function showAnalysisToaster(sessionKey) {
     if (!sessionKey) {
-        // Eski sistem fallback
+        // Fallback for old system
         const existingToaster = document.getElementById('analysisToaster');
         if (existingToaster) {
             existingToaster.remove();
@@ -784,7 +784,7 @@ function showAnalysisToaster(sessionKey) {
             " onclick="maximizeAnalysisModal()">
                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
                     <div style="font-weight: bold; flex: 1;">
-                        🔬 Analiz Devam Ediyor
+                        🔬 Analysis Ongoing
                     </div>
                     <div onclick="event.stopPropagation(); closeSingleDeviceAnalysisModal();" style="
                         background: rgba(255,255,255,0.2);
@@ -799,7 +799,7 @@ function showAnalysisToaster(sessionKey) {
                     ">&times;</div>
                 </div>
                 <div id="toasterProgressText" style="font-size: 12px; opacity: 0.9;">
-                    Analiz işlemi devam ediyor...
+                    Analysis is ongoing...
                 </div>
                 <div style="background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px; margin-top: 8px; overflow: hidden;">
                     <div id="toasterProgressBar" style="background: white; height: 100%; width: 0%; transition: width 0.5s;"></div>
@@ -820,9 +820,9 @@ function showAnalysisToaster(sessionKey) {
         existingToaster.remove();
     }
     
-    // Toaster konumunu hesapla (birden fazla toaster için)
+    // Calculate toaster position (for multiple toasters)
     const toasterPosition = calculateToasterPosition();
-    const displayName = session.type === 'bulk' ? 'Toplu Analiz' : `Analiz - ${session.targetIP}`;
+    const displayName = session.type === 'bulk' ? 'Bulk Analysis' : `Analysis - ${session.targetIP}`;
     
     const toasterHtml = `
         <div id="${toasterId}" style="
@@ -857,7 +857,7 @@ function showAnalysisToaster(sessionKey) {
                 ">&times;</div>
             </div>
             <div id="toasterProgressText_${sessionKey.replace(/\./g, '_')}" style="font-size: 11px; opacity: 0.9;">
-                Analiz işlemi devam ediyor...
+                Analysis is ongoing...
             </div>
             <div style="background: rgba(255,255,255,0.2); height: 3px; border-radius: 2px; margin-top: 6px; overflow: hidden;">
                 <div id="toasterProgressBar_${sessionKey.replace(/\./g, '_')}" style="background: white; height: 100%; width: 0%; transition: width 0.5s;"></div>
@@ -868,12 +868,12 @@ function showAnalysisToaster(sessionKey) {
     document.body.insertAdjacentHTML('beforeend', toasterHtml);
 }
 
-// Toaster konumunu hesapla (birden fazla toaster için)
+// Calculate toaster position (for multiple toasters)
 function calculateToasterPosition() {
     const existingToasters = document.querySelectorAll('[id^="analysisToaster_"]');
     const baseBottom = 20;
     const baseRight = 20;
-    const toasterHeight = 80; // Yaklaşık toaster yüksekliği
+    const toasterHeight = 80; // Approximate toaster height
     const margin = 10;
     
     return {
@@ -882,7 +882,7 @@ function calculateToasterPosition() {
     };
 }
 
-// Toaster progress güncelle
+// Update toaster progress
 function updateToasterProgress(sessionKey, progressPercent, message) {
     if (!sessionKey) {
         console.warn('updateToasterProgress called without sessionKey');
@@ -901,42 +901,42 @@ function updateToasterProgress(sessionKey, progressPercent, message) {
     }
 }
 
-// Toaster kapama işlemini yönet - aktif analiz varsa sadece temp dosyasını temizle
+// Handle toaster close - clear temp file if active analysis exists
 function handleToasterClose(sessionKey) {
-    // Aktif analiz durumunu kontrol et
+    // Check active analysis state
     fetch('/get_active_analyses')
         .then(response => response.json())
         .then(activeAnalyses => {
             const isActive = activeAnalyses[sessionKey] && activeAnalyses[sessionKey].status === 'analyzing';
             
             if (isActive) {
-                // Aktif analiz varsa, sadece temp dosyasını temizle, toaster'ı kapatma
-                console.log('Aktif analiz devam ediyor, toaster açık kalacak');
-                showToast('ℹ️ Analiz devam ediyor, toaster açık kalacak', 'info');
+                // If active analysis exists, keep toaster open
+                console.log('Active analysis ongoing, toaster will remain open');
+                showToast('ℹ️ Analysis ongoing, toaster will remain open', 'info');
                 return;
             } else {
-                // Analiz bitmişse toaster'ı kapat
+                // Close toaster if analysis is finished
                 const toaster = document.getElementById(`analysisToaster_${sessionKey.replace(/\./g, '_')}`);
                 if (toaster) {
                     toaster.remove();
                 }
                 
-                // Session'ı temizle
+                // Clear session
                 if (activeAnalysisSessions.has(sessionKey)) {
                     activeAnalysisSessions.delete(sessionKey);
                 }
                 
-                // Temp dosyasını temizle
+                // Clear temp file
                 fetch(`/clear_analysis_temp/${sessionKey}`, { method: 'POST' })
-                    .catch(error => console.warn('Temp dosya temizleme hatası:', error));
+                    .catch(error => console.warn('Temp file clear error:', error));
             }
         })
         .catch(error => {
-            console.error('Aktif analiz kontrolü hatası:', error);
+            console.error('Active analysis check error:', error);
         });
 }
 
-// Analiz verilerini temp dosyaya kaydet
+// Save analysis data to temp file
 async function saveAnalysisToTemp(sessionKey, analysisData) {
     try {
         const response = await fetch('/save_analysis_temp', {
@@ -951,14 +951,14 @@ async function saveAnalysisToTemp(sessionKey, analysisData) {
         });
         
         if (!response.ok) {
-            console.warn('Temp dosya kaydetme hatası:', response.statusText);
+            console.warn('Temp file save error:', response.statusText);
         }
     } catch (error) {
-        console.warn('Temp dosya kaydetme hatası:', error);
+        console.warn('Temp file save error:', error);
     }
 }
 
-// Analiz tamamlandı notification'ı göster
+// Show analysis completed notification
 function showAnalysisCompletedNotification() {
     const notificationHtml = `
         <div id="completedNotification" style="
@@ -977,7 +977,7 @@ function showAnalysisCompletedNotification() {
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <div style="font-size: 24px; margin-right: 10px;">✅</div>
                 <div style="font-weight: bold; flex: 1;">
-                    Analiz Tamamlandı!
+                    Analysis Completed!
                 </div>
                 <div onclick="document.getElementById('completedNotification').remove();" style="
                     background: rgba(255,255,255,0.2);
@@ -991,12 +991,12 @@ function showAnalysisCompletedNotification() {
                 ">&times;</div>
             </div>
             <div style="font-size: 14px; opacity: 0.9;">
-                ${currentAnalysisIP} için detaylı analiz başarıyla tamamlandı.
+                Detailed analysis for ${currentAnalysisIP} has been successfully completed.
             </div>
             <div style="margin-top: 15px;">
                 <button onclick="maximizeAnalysisModal(); document.getElementById('completedNotification').remove();" 
                         style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
-                    📊 Sonuçları Gör
+                    📊 View Results
                 </button>
             </div>
         </div>
@@ -1011,7 +1011,7 @@ function showAnalysisCompletedNotification() {
     
     document.body.insertAdjacentHTML('beforeend', notificationHtml);
     
-    // 10 saniye sonra otomatik kapat
+    // Auto close after 10 seconds
     setTimeout(() => {
         const notification = document.getElementById('completedNotification');
         if (notification) {
@@ -1020,15 +1020,15 @@ function showAnalysisCompletedNotification() {
     }, 10000);
 }
 
-// Toplu analiz başlat
+// Start bulk analysis
 async function startBulkAnalysis() {
     const sessionKey = 'bulk';
     
-    // Modal'ın var olduğunu kontrol et, yoksa oluştur
+    // Check if modal exists, create if not
     if (!activeAnalysisSessions.has(sessionKey)) {
         console.error('Bulk analysis modal not found. Creating modal first...');
         showUnifiedAnalysisModal(null, 'bulk');
-        // Modal oluşturulduktan sonra kısa bir bekleme
+        // Short delay after modal creation
         await new Promise(resolve => setTimeout(resolve, 100));
     }
     
@@ -1043,7 +1043,7 @@ async function startBulkAnalysis() {
     const verboseLogs = modal.querySelector('#verboseLogs');
     const minimizeBtn = modal.querySelector(`#minimizeBtn_${sessionKey.replace(/\./g, '_')}`);
     
-    // Element'lerin var olduğunu kontrol et
+    // Check if elements exist
     if (!progressDiv || !progressBar || !progressText || !resultsDiv || !verboseLogsSection || !verboseLogs || !minimizeBtn) {
         console.error('Required modal elements not found:', {
             progressDiv: !!progressDiv,
@@ -1054,49 +1054,49 @@ async function startBulkAnalysis() {
             verboseLogs: !!verboseLogs,
             minimizeBtn: !!minimizeBtn
         });
-        alert('Modal elementleri bulunamadı. Lütfen sayfayı yenileyin.');
+        alert('Modal elements not found. Please refresh the page.');
         return;
     }
     
-    // Progress göster
+    // Show progress
     progressDiv.style.display = 'block';
     resultsDiv.style.display = 'none';
     verboseLogsSection.style.display = 'block';
     minimizeBtn.style.display = 'inline-block';
     
-    // Verbose logları temizle
+    // Clear verbose logs
     verboseLogs.innerHTML = '';
     
     try {
-        addVerboseLog('🚀 Toplu gelişmiş analiz başlatılıyor...');
+        addVerboseLog('🚀 Starting bulk advanced analysis...');
         
-        // Toplu analiz başlat
+        // Start bulk analysis
         const response = await fetch('/detailed_analysis');
         const result = await response.json();
         
         if (response.ok) {
-            progressText.textContent = 'Toplu analiz başlatıldı, ilerlenme takip ediliyor...';
+            progressText.textContent = 'Bulk analysis started, monitoring progress...';
             progressBar.style.width = '5%';
             progressBar.textContent = '5%';
-            addVerboseLog('✅ Toplu analiz başarıyla başlatıldı');
-            addVerboseLog('🔄 Real-time izleme başlatılıyor...');
+            addVerboseLog('✅ Bulk analysis successfully started');
+            addVerboseLog('🔄 Starting real-time monitoring...');
             
-            // Progress takip et
+            // Monitor progress
             monitorBulkAnalysisProgress();
             
         } else {
-            progressText.textContent = `Analiz hatası: ${result.error}`;
-            addVerboseLog(`❌ Analiz başlatma hatası: ${result.error}`);
+            progressText.textContent = `Analysis error: ${result.error}`;
+            addVerboseLog(`❌ Analysis start error: ${result.error}`);
             progressDiv.style.display = 'none';
         }
     } catch (error) {
-        progressText.textContent = `Bağlantı hatası: ${error.message}`;
-        addVerboseLog(`❌ Bağlantı hatası: ${error.message}`);
+        progressText.textContent = `Connection error: ${error.message}`;
+        addVerboseLog(`❌ Connection error: ${error.message}`);
         progressDiv.style.display = 'none';
     }
 }
 
-// Toplu analiz durumunu takip et
+// Monitor bulk analysis progress
 function monitorBulkAnalysisProgress() {
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
@@ -1116,29 +1116,29 @@ function monitorBulkAnalysisProgress() {
                 progressPercent = 100;
                 progressBar.style.width = '100%';
                 progressBar.textContent = '100%';
-                progressText.textContent = 'Toplu analiz tamamlandı!';
+                progressText.textContent = 'Bulk analysis completed!';
                 
-                addVerboseLog('✅ Toplu analiz başarıyla tamamlandı!');
-                addVerboseLog('📊 Sonuçlar hazırlanıyor...');
+                addVerboseLog('✅ Bulk analysis successfully completed!');
+                addVerboseLog('📊 Preparing results...');
                 
-                // Toaster progress güncelle
+                // Update toaster progress
                 if (isAnalysisMinimized) {
-                    updateToasterProgress('bulk', 100, 'Toplu analiz tamamlandı!');
+                    updateToasterProgress('bulk', 100, 'Bulk analysis completed!');
                 }
                 
-                // Tamamlandı notification göster
+                // Show completed notification
                 showAnalysisCompletedNotification();
                 
-                // Sonuçları göster
+                // Show results
                 setTimeout(() => {
                     document.getElementById('analysisProgress').style.display = 'none';
                     resultsDiv.style.display = 'block';
                     resultsContent.innerHTML = `
                         <div class="analysis-summary">
-                            <h4>🎉 Toplu Gelişmiş Analiz Tamamlandı</h4>
-                            <p>Tüm cihazların gelişmiş analizi başarıyla tamamlandı. Güncellenmiş bilgileri görmek için cihaz listesini yenileyin.</p>
+                            <h4>🎉 Bulk Advanced Analysis Completed</h4>
+                            <p>Advanced analysis for all devices has been successfully completed. Refresh the device list to see updated information.</p>
                             <button onclick="if(typeof loadDevices === 'function') loadDevices(true); else window.location.reload();" class="btn btn-success">
-                                🔄 Cihaz Listesini Yenile
+                                🔄 Refresh Device List
                             </button>
                         </div>
                     `;
@@ -1146,40 +1146,40 @@ function monitorBulkAnalysisProgress() {
                 
             } else if (status.status === 'error') {
                 clearInterval(checkInterval);
-                progressText.textContent = `Analiz hatası: ${status.message}`;
+                progressText.textContent = `Analysis error: ${status.message}`;
                 progressBar.style.backgroundColor = '#dc3545';
-                progressBar.textContent = 'HATA';
+                progressBar.textContent = 'ERROR';
                 
-                addVerboseLog(`❌ Analiz hatası: ${status.message}`);
+                addVerboseLog(`❌ Analysis error: ${status.message}`);
                 
-                // Toaster'ı güncelle
+                // Update toaster
                 if (isAnalysisMinimized) {
-                    updateToasterProgress('bulk', 0, 'Analiz hatası!');
+                    updateToasterProgress('bulk', 0, 'Analysis error!');
                 }
                 
             } else if (status.status === 'analyzing') {
-                const currentMessage = status.message || 'Analiz devam ediyor...';
+                const currentMessage = status.message || 'Analysis ongoing...';
                 progressText.textContent = currentMessage;
                 
-                // Verbose log'a sadece yeni mesajları ekle
+                // Add only new messages to verbose log
                 if (currentMessage !== lastMessage) {
                     addVerboseLog(`🔄 ${currentMessage}`);
                     lastMessage = currentMessage;
                 }
                 
-                // Progress artır (max %90'a kadar)
+                // Increment progress (max up to 90%)
                 if (progressPercent < 90) {
                     progressPercent += 3;
                     progressBar.style.width = progressPercent + '%';
                     progressBar.textContent = progressPercent + '%';
                 }
                 
-                // Toaster progress güncelle
+                // Update toaster progress
                 if (isAnalysisMinimized) {
                     updateToasterProgress('bulk', progressPercent, currentMessage);
                 }
                 
-                // Temp dosyaya kaydet
+                // Save to temp file
                 saveAnalysisToTemp('bulk', {
                     progress: progressPercent,
                     message: currentMessage,
@@ -1189,17 +1189,17 @@ function monitorBulkAnalysisProgress() {
                 });
             }
         } catch (error) {
-            console.error('Toplu analiz durumu kontrol hatası:', error);
-            addVerboseLog(`⚠️ Status kontrol hatası: ${error.message}`);
+            console.error('Bulk analysis status check error:', error);
+            addVerboseLog(`⚠️ Status check error: ${error.message}`);
         }
-    }, 2000); // Her 2 saniyede kontrol et
+    }, 2000); // Check every 2 seconds
 }
 
-// Tek cihaz analizi başlat
+// Start single device analysis
 async function startSingleDeviceAnalysis(ip) {
     const sessionKey = ip;
     
-    // Session kontrolü
+    // Check session
     if (!activeAnalysisSessions.has(sessionKey)) {
         console.error('Single device analysis session not found for:', ip);
         return;
@@ -1216,23 +1216,23 @@ async function startSingleDeviceAnalysis(ip) {
     const verboseLogs = modal.querySelector('#verboseLogs');
     const minimizeBtn = modal.querySelector(`#minimizeBtn_${sessionKey.replace(/\./g, '_')}`);
     
-    // Progress göster
+    // Show progress
     progressDiv.style.display = 'block';
     resultsDiv.style.display = 'none';
     verboseLogsSection.style.display = 'block';
     minimizeBtn.style.display = 'inline-block';
     
-    // Verbose logları temizle
+    // Clear verbose logs
     verboseLogs.innerHTML = '';
     
-    // Butonları güncelle
+    // Update buttons
     updateAnalysisButtons(sessionKey, true);
     
     try {
-        addVerboseLog('🚀 Detaylı analiz başlatılıyor...', sessionKey);
-        addVerboseLog(`📡 Hedef cihaz: ${ip}`, sessionKey);
+        addVerboseLog('🚀 Starting detailed analysis...', sessionKey);
+        addVerboseLog(`📡 Target device: ${ip}`, sessionKey);
         
-        // Enhanced analiz başlat
+        // Start enhanced analysis
         const response = await fetch(`/enhanced_analysis/${ip}`, {
             method: 'POST'
         });
@@ -1240,27 +1240,27 @@ async function startSingleDeviceAnalysis(ip) {
         const result = await response.json();
         
         if (response.ok) {
-            progressText.textContent = 'Analiz başlatıldı, ilerlenme takip ediliyor...';
+            progressText.textContent = 'Analysis started, monitoring progress...';
             progressBar.textContent = '5%';
-            addVerboseLog('✅ Analiz başarıyla başlatıldı', sessionKey);
-            addVerboseLog('🔄 Real-time izleme başlatılıyor...', sessionKey);
+            addVerboseLog('✅ Analysis successfully started', sessionKey);
+            addVerboseLog('🔄 Starting real-time monitoring...', sessionKey);
             
-            // Progress takip et
+            // Monitor progress
             monitorSingleDeviceAnalysis(ip);
             
         } else {
-            progressText.textContent = `Analiz hatası: ${result.error}`;
-            addVerboseLog(`❌ Analiz başlatma hatası: ${result.error}`, sessionKey);
+            progressText.textContent = `Analysis error: ${result.error}`;
+            addVerboseLog(`❌ Analysis start error: ${result.error}`, sessionKey);
             progressDiv.style.display = 'none';
         }
     } catch (error) {
-        progressText.textContent = `Bağlantı hatası: ${error.message}`;
-        addVerboseLog(`❌ Bağlantı hatası: ${error.message}`, sessionKey);
+        progressText.textContent = `Connection error: ${error.message}`;
+        addVerboseLog(`❌ Connection error: ${error.message}`, sessionKey);
         progressDiv.style.display = 'none';
     }
 }
 
-// Analiz butonlarını güncelle (başlat/durdur)
+// Update analysis buttons (start/stop)
 function updateAnalysisButtons(sessionKey, isRunning) {
     const session = activeAnalysisSessions.get(sessionKey);
     if (!session) return;
@@ -1284,48 +1284,48 @@ function updateAnalysisButtons(sessionKey, isRunning) {
     }
 }
 
-// Analizi durdur
+// Stop analysis
 async function stopAnalysis(sessionKey) {
     const session = activeAnalysisSessions.get(sessionKey);
     if (!session) return;
     
     try {
         if (session.type === 'bulk') {
-            // Toplu analizi durdur
+            // Stop bulk analysis
             const response = await fetch('/stop_bulk_analysis', {
                 method: 'POST'
             });
-            addVerboseLog('🛑 Toplu analiz durdurma talebi gönderildi...', sessionKey);
+            addVerboseLog('🛑 Bulk analysis stop request sent...', sessionKey);
         } else {
-            // Tek cihaz analizini durdur
+            // Stop single device analysis
             const response = await fetch(`/stop_enhanced_analysis/${session.targetIP}`, {
                 method: 'POST'
             });
-            addVerboseLog(`🛑 ${session.targetIP} analizi durdurma talebi gönderildi...`, sessionKey);
+            addVerboseLog(`🛑 Stop request sent for ${session.targetIP} analysis...`, sessionKey);
         }
         
-        // Butonları güncelle
+        // Update buttons
         updateAnalysisButtons(sessionKey, false);
         
-        // Progress'i durdur
+        // Stop progress
         const modal = document.getElementById(session.modalId);
         const progressText = modal.querySelector('#progressText');
         if (progressText) {
-            progressText.textContent = 'Analiz durduruldu.';
+            progressText.textContent = 'Analysis stopped.';
         }
         
-        addVerboseLog('✅ Analiz başarıyla durduruldu', sessionKey);
+        addVerboseLog('✅ Analysis successfully stopped', sessionKey);
         
     } catch (error) {
-        addVerboseLog(`❌ Analiz durdurma hatası: ${error.message}`, sessionKey);
+        addVerboseLog(`❌ Analysis stop error: ${error.message}`, sessionKey);
     }
 }
 
-// Verbose log ekle - Session-aware version
+// Add verbose log - Session-aware version
 function addVerboseLog(message, sessionKey = null) {
-    // Session key yoksa, aktif session'ları kontrol et
+    // If no session key, check active sessions
     if (!sessionKey && activeAnalysisSessions.size > 0) {
-        // İlk aktif session'ı kullan
+        // Use first active session
         sessionKey = activeAnalysisSessions.keys().next().value;
     }
     
@@ -1346,7 +1346,7 @@ function addVerboseLog(message, sessionKey = null) {
     }
 }
 
-// Tek cihaz analiz durumunu takip et
+// Monitor single device analysis progress
 function monitorSingleDeviceAnalysis(ip) {
     const sessionKey = ip;
     const session = activeAnalysisSessions.get(sessionKey);
@@ -1370,80 +1370,80 @@ function monitorSingleDeviceAnalysis(ip) {
                 progressPercent = 100;
                 progressBar.style.width = '100%';
                 progressBar.textContent = '100%';
-                progressText.textContent = 'Analiz tamamlandı!';
+                progressText.textContent = 'Analysis completed!';
                 
-                addVerboseLog('✅ Analiz başarıyla tamamlandı!', sessionKey);
-                addVerboseLog('📊 Sonuçlar yükleniyor...', sessionKey);
+                addVerboseLog('✅ Analysis successfully completed!', sessionKey);
+                addVerboseLog('📊 Loading results...', sessionKey);
                 
-                // Butonları sıfırla
+                // Reset buttons
                 updateAnalysisButtons(sessionKey, false);
                 
-                // Toaster progress güncelle
+                // Update toaster progress
                 if (session.isMinimized) {
-                    updateToasterProgress(sessionKey, 100, 'Analiz tamamlandı!');
+                    updateToasterProgress(sessionKey, 100, 'Analysis completed!');
                 }
                 
-                // Tamamlandı notification göster
+                // Show completed notification
                 showAnalysisCompletedNotification();
                 
-                // Sonuçları göster
+                // Show results
                 setTimeout(() => {
                     modal.querySelector('#analysisProgress').style.display = 'none';
                     resultsDiv.style.display = 'block';
                     
-                    // Cihaz detaylarını yeniden yükle ve göster
+                    // Reload and show device details
                     loadDeviceAnalysisResults(ip, sessionKey);
                 }, 1000);
                 
             } else if (status.status === 'error') {
                 clearInterval(checkInterval);
-                progressText.textContent = `Analiz hatası: ${status.message}`;
+                progressText.textContent = `Analysis error: ${status.message}`;
                 progressBar.style.backgroundColor = '#dc3545';
-                progressBar.textContent = 'HATA';
+                progressBar.textContent = 'ERROR';
                 
-                addVerboseLog(`❌ Analiz hatası: ${status.message}`, sessionKey);
+                addVerboseLog(`❌ Analysis error: ${status.message}`, sessionKey);
                 
-                // Butonları sıfırla
+                // Reset buttons
                 updateAnalysisButtons(sessionKey, false);
                 
-                // Toaster'ı güncelle
+                // Update toaster
                 if (session.isMinimized) {
-                    updateToasterProgress(sessionKey, 0, 'Analiz hatası!');
+                    updateToasterProgress(sessionKey, 0, 'Analysis error!');
                 }
                 
             } else if (status.status === 'stopped') {
                 clearInterval(checkInterval);
-                progressText.textContent = 'Analiz durduruldu';
+                progressText.textContent = 'Analysis stopped';
                 progressBar.style.backgroundColor = '#6c757d';
-                progressBar.textContent = 'DURDURULDU';
+                progressBar.textContent = 'STOPPED';
                 
-                addVerboseLog('🛑 Analiz kullanıcı tarafından durduruldu', sessionKey);
+                addVerboseLog('🛑 Analysis stopped by user', sessionKey);
                 
-                // Butonları sıfırla
+                // Reset buttons
                 updateAnalysisButtons(sessionKey, false);
                 
-                // Toaster'ı güncelle
+                // Update toaster
                 if (session.isMinimized) {
-                    updateToasterProgress(sessionKey, 0, 'Analiz durduruldu');
+                    updateToasterProgress(sessionKey, 0, 'Analysis stopped');
                 }
                 
             } else if (status.status === 'analyzing') {
-                const currentMessage = status.message || 'Analiz devam ediyor...';
+                const currentMessage = status.message || 'Analysis ongoing...';
                 progressText.textContent = currentMessage;
                 
-                // Verbose log'a sadece yeni mesajları ekle
+                // Add only new messages to verbose log
                 if (currentMessage !== lastMessage) {
                     addVerboseLog(`🔄 ${currentMessage}`, sessionKey);
                     lastMessage = currentMessage;
                 }
                 
-                // Backend'ten gelen progress kullan, yoksa artır
+                // Use progress from backend, otherwise increment
                 if (status.progress) {
                     progressPercent = Math.round(status.progress);
                     progressBar.style.width = progressPercent + '%';
                     progressBar.textContent = progressPercent + '%';
                 } else {
-                    // Fallback: manuel artırım (max %90'a kadar)
+                    // Fallback: manual increment (max up to 90%)
                     if (progressPercent < 90) {
                         progressPercent += 5;
                         progressBar.style.width = progressPercent + '%';
@@ -1451,12 +1451,12 @@ function monitorSingleDeviceAnalysis(ip) {
                     }
                 }
                 
-                // Toaster progress güncelle
+                // Update toaster progress
                 if (session.isMinimized) {
                     updateToasterProgress(sessionKey, progressPercent, currentMessage);
                 }
                 
-                // Temp dosyaya kaydet
+                // Save to temp file
                 saveAnalysisToTemp(sessionKey, {
                     progress: progressPercent,
                     message: currentMessage,
@@ -1465,28 +1465,28 @@ function monitorSingleDeviceAnalysis(ip) {
                     timestamp: new Date().toISOString()
                 });
                 
-                // Mesajdan analiz türünü çıkar ve verbose log'a ekle
+                // Extract analysis type from message and add to verbose log
                 analyzeStatusMessage(currentMessage, sessionKey);
             }
         } catch (error) {
-            console.error('Analiz durumu kontrol hatası:', error);
-            addVerboseLog(`⚠️ Status kontrol hatası: ${error.message}`, sessionKey);
+            console.error('Analysis status check error:', error);
+            addVerboseLog(`⚠️ Status check error: ${error.message}`, sessionKey);
         }
-    }, 2000); // Her 2 saniyede kontrol et
+    }, 2000); // Check every 2 seconds
 }
 
-// Status mesajını analiz et ve detaylı bilgi ekle
+// Analyze status message and add detailed info
 function analyzeStatusMessage(message, sessionKey) {
     const verboseMessages = {
-        'erişim bilgileri': '🔐 Cihaz erişim bilgileri kontrol ediliyor',
-        'credential': '🔑 Kimlik bilgileri işleniyor',
-        'port tarama': '🔌 Port tarama işlemi devam ediyor',
-        'ssh': '🖥️ SSH servis analizi yapılıyor',
-        'web': '🌐 Web servisleri taranıyor', 
-        'snmp': '📊 SNMP bilgileri alınıyor',
-        'raspberry': '🥧 Raspberry Pi donanım analizi',
-        'analiz sonuçları': '💾 Sonuçlar kaydediliyor',
-        'kapsamlı': '🔍 Kapsamlı sistem taraması'
+        'access information': '🔐 Checking device access information',
+        'credential': '🔑 Processing credentials',
+        'port scan': '🔌 Port scanning in progress',
+        'ssh': '🖥️ SSH service analysis in progress',
+        'web': '🌐 Scanning web services', 
+        'snmp': '📊 Retrieving SNMP information',
+        'raspberry': '🥧 Raspberry Pi hardware analysis',
+        'analysis results': '💾 Saving results',
+        'comprehensive': '🔍 Comprehensive system scan'
     };
     
     const lowerMessage = message.toLowerCase();
@@ -1498,7 +1498,7 @@ function analyzeStatusMessage(message, sessionKey) {
     }
 }
 
-// Cihaz analiz sonuçlarını yükle ve göster
+// Load and show device analysis results
 async function loadDeviceAnalysisResults(ip, sessionKey) {
     const session = activeAnalysisSessions.get(sessionKey);
     const modal = document.getElementById(session.modalId);
@@ -1526,7 +1526,7 @@ async function loadDeviceAnalysisResults(ip, sessionKey) {
             if (device.open_ports && device.open_ports.length > 0) {
                 resultsHtml += `
                     <div class="analysis-section">
-                        <h4>🔌 Açık Portlar</h4>
+                        <h4>🔌 Open Ports</h4>
                         <div class="ports-grid">
                 `;
                 
@@ -1558,7 +1558,7 @@ async function loadDeviceAnalysisResults(ip, sessionKey) {
             if (enhancedInfo && Object.keys(enhancedInfo).length > 0) {
                 resultsHtml += `
                     <div class="analysis-section">
-                        <h4>🔍 Gelişmiş Analiz Bilgileri</h4>
+                        <h4>🔍 Advanced Analysis Information</h4>
                         <div class="enhanced-info">
                             <pre>${JSON.stringify(enhancedInfo, null, 2)}</pre>
                         </div>
@@ -1568,14 +1568,14 @@ async function loadDeviceAnalysisResults(ip, sessionKey) {
             
             resultsContent.innerHTML = resultsHtml;
         } else {
-            resultsContent.innerHTML = '<p>Cihaz bilgileri yüklenemedi.</p>';
+            resultsContent.innerHTML = '<p>Failed to load device information.</p>';
         }
     } catch (error) {
-        resultsContent.innerHTML = `<p>Hata: ${error.message}</p>`;
+        resultsContent.innerHTML = `<p>Error: ${error.message}</p>`;
     }
 }
 
-// Gelişmiş analiz durumunu takip et
+// Monitor enhanced analysis progress
 function monitorEnhancedAnalysis(ip) {
     const checkInterval = setInterval(async () => {
         try {
@@ -1584,71 +1584,71 @@ function monitorEnhancedAnalysis(ip) {
             
             if (status.status === 'completed') {
                 clearInterval(checkInterval);
-                showToast(`🎉 ${ip} gelişmiş analizi tamamlandı!`, 'success');
+                showToast(`🎉 Enhanced analysis for ${ip} completed!`, 'success');
                 
-                // Cihaz listesini yenile
+                // Refresh device list
                 await loadDevices(true);
                 
             } else if (status.status === 'error') {
                 clearInterval(checkInterval);
-                showToast(`❌ ${ip} analiz hatası: ${status.message}`, 'error');
+                showToast(`❌ Analysis error for ${ip}: ${status.message}`, 'error');
             } else if (status.status === 'analyzing') {
-                // Progress göster (isteğe bağlı)
-                console.log(`${ip} analiz ediliyor: ${status.message}`);
+                // Show progress (optional)
+                console.log(`${ip} is being analyzed: ${status.message}`);
             }
         } catch (error) {
-            console.error('Enhanced analiz durumu kontrol hatası:', error);
+            console.error('Enhanced analysis status check error:', error);
         }
-    }, 3000); // Her 3 saniyede kontrol et
+    }, 3000); // Check every 3 seconds
 }
 
-// Cihaz tablosuna erişim butonu ekle
+// Add access button to device table
 function addAccessButtonToDevice(deviceRow, ip) {
     const actionsCell = deviceRow.querySelector('.device-actions');
     if (actionsCell) {
         const accessBtn = document.createElement('button');
         accessBtn.className = 'btn btn-sm btn-info';
         accessBtn.innerHTML = '🔐';
-        accessBtn.title = 'Erişim Bilgileri';
+        accessBtn.title = 'Access Information';
         accessBtn.onclick = () => openDeviceAccessModal(ip);
         
         actionsCell.appendChild(accessBtn);
     }
 }
 
-// Bulk analiz durumunu kontrol et ve UI'yi restore et
+// Check bulk analysis status and restore UI
 async function checkBulkAnalysisStatusAndRestoreUI(sessionKey) {
     try {
         const response = await fetch('/get_active_analyses');
         const activeAnalyses = await response.json();
         
         if (activeAnalyses.bulk && activeAnalyses.bulk.status === 'analyzing') {
-            // Server'da bulk analiz devam ediyor, UI'yi restore et
+            // Bulk analysis is ongoing on server, restore UI
             updateUnifiedAnalysisButtons(sessionKey, true);
             
-            // Verbose logs bölümünü göster
+            // Show verbose logs section
             const verboseSection = document.getElementById('verboseLogsSection');
             if (verboseSection) {
                 verboseSection.style.display = 'block';
             }
             
-            // Global değişkeni güncelle
+            // Update global variable
             if (typeof bulkAnalysisRunning !== 'undefined') {
                 window.bulkAnalysisRunning = true;
             }
             
-            console.log('✅ Bulk analiz UI durumu server state\'inden restore edildi');
+            console.log('✅ Bulk analysis UI state restored from server state');
         } else {
-            // Analiz devam etmiyor, normal UI
+            // Analysis not ongoing, normal UI
             updateUnifiedAnalysisButtons(sessionKey, false);
-            console.log('ℹ️ Bulk analiz tamamlanmış veya durmuş');
+            console.log('ℹ️ Bulk analysis completed or stopped');
         }
     } catch (error) {
-        console.error('Bulk analiz durumu kontrol hatası:', error);
+        console.error('Bulk analysis status check error:', error);
     }
 }
 
-// Modal dışına tıklandığında kapat
+// Close modal on outside click
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('deviceAccessModal');
     if (event.target === modal) {
@@ -1656,7 +1656,7 @@ window.addEventListener('click', function(event) {
     }
 });
 
-// Klavye kısayolları
+// Keyboard shortcuts
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape' && document.getElementById('deviceAccessModal').style.display === 'block') {
         closeDeviceAccessModal();

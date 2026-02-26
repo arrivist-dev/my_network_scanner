@@ -1,4 +1,4 @@
-// My Network Scanner (MNS) - Ana JavaScript Dosyası
+// My Network Scanner (MNS) - Main JavaScript File
 
 let devices = [];
 let deviceTypes = {};
@@ -9,11 +9,11 @@ let bulkAnalysisRunning = false;
 let backgroundAnalysisIndicator = null;
 let lastAnalysisMessage = null;
 
-// Tablo sıralama değişkenleri
+// Table sorting variables
 let currentSortColumn = null;
 let currentSortDirection = 'asc';
 
-// Progress tracking için global değişken
+// Progress tracking global variable
 let progressInterval = null;
 
 // Language management
@@ -39,28 +39,28 @@ async function changeLanguage(languageCode) {
     }
 }
 
-// Sayfa yüklendiğinde verileri getir
+// Fetch data when the page loads
 window.addEventListener('load', async function() {
     // Wait for translations to load
     await translationManager.loadTranslations();
     
     await loadDeviceTypes();
-    await loadDevices(true); // İlk yüklemede filtreleri güncelle
+    await loadDevices(true); // Update filters on initial load
     initializeTableSorting();
     
-    // Scan durumunu kontrol et ve buton durumlarını ayarla
+    // Check scan status and set button states
     await checkScanStatus();
     
-    // Versiyon bilgisini yükle
+    // Load version information
     await loadVersion();
     
-    // Aktif analiz işlemlerini restore et
+    // Restore active analysis processes
     await restoreActiveAnalyses();
     
-    // startProgressUpdates(); - Bu satırı kaldırdık, sadece tarama başladığında çalışacak
+    // startProgressUpdates(); - Removed this line, will only run when scanning starts
 });
 
-// Tablo sıralama başlatma
+// Initialize table sorting
 function initializeTableSorting() {
     const sortableHeaders = document.querySelectorAll('.sortable');
     sortableHeaders.forEach(header => {
@@ -71,14 +71,14 @@ function initializeTableSorting() {
         });
     });
     
-    // Başlangıçta hiçbir sıralama gösterme, sadece IP'ye göre sırala (arka planda)
-    currentSortColumn = null; // Hiçbir sütun seçili değil
+    // Initially show no sorting, just sort by IP in the background
+    currentSortColumn = null; // No column selected
     currentSortDirection = 'asc';
 }
 
-// Tablo sıralama fonksiyonu
+// Table sorting function
 function sortTable(column, type) {
-    // Aynı kolona tıklanırsa yönü değiştir
+    // If the same column is clicked, toggle the direction
     if (currentSortColumn === column) {
         currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -90,7 +90,7 @@ function sortTable(column, type) {
     displayDevices();
 }
 
-// Sıralama göstergelerini güncelle
+// Update sort indicators
 function updateSortIndicators() {
     const headers = document.querySelectorAll('.sortable');
     headers.forEach(header => {
@@ -111,10 +111,10 @@ function updateSortIndicators() {
     }
 }
 
-// Cihazları sırala
+// Sort devices
 function sortDevices(devicesArray) {
-    let sortColumn = currentSortColumn || 'ip'; // Eğer hiçbir sütun seçili değilse IP kullan
-    let sortDirection = currentSortColumn ? currentSortDirection : 'asc'; // Varsayılan artan
+    let sortColumn = currentSortColumn || 'ip'; // Default to IP if no column is selected
+    let sortDirection = currentSortColumn ? currentSortDirection : 'asc'; // Default to ascending
 
     return [...devicesArray].sort((a, b) => {
         let aValue, bValue;
@@ -160,19 +160,19 @@ function sortDevices(devicesArray) {
                 return 0;
         }
 
-        // Tarih sıralaması
+        // Date sorting
         if (sortColumn === 'last_seen') {
             const result = aValue - bValue;
             return sortDirection === 'asc' ? result : -result;
         }
         
-        // Port sayısı sıralaması
+        // Port count sorting
         if (sortColumn === 'open_ports') {
             const result = aValue - bValue;
             return sortDirection === 'asc' ? result : -result;
         }
         
-        // Metin sıralaması
+        // Text sorting
         if (aValue < bValue) {
             return sortDirection === 'asc' ? -1 : 1;
         }
@@ -188,10 +188,10 @@ async function loadDevices(updateFiltersFlag = false) {
         const response = await fetch('/devices');
         const newDevices = await response.json();
         
-        // Sadece cihaz listesi değiştiyse veya açıkça istendiğinde filtreleri güncelle
+        // Update filters only if the device list has changed or explicitly requested
         let shouldUpdateFilters = updateFiltersFlag;
         
-        // Eğer açıkça filtre güncellemesi istenmemişse, cihaz listesinin değişip değişmediğini kontrol et
+        // If filter update is not explicitly requested, check if the device list has changed
         if (!updateFiltersFlag) {
             const oldDevicesStr = JSON.stringify(devices.map(d => ({
                 ip: d.ip, 
@@ -226,11 +226,11 @@ async function loadDevices(updateFiltersFlag = false) {
 
 async function loadDeviceTypes() {
     try {
-        // Çevirili device types'ı yükle
+        // Load translated device types
         const response = await fetch('/api/device-types/translated');
         deviceTypes = await response.json();
         
-        // Device type dropdowns'ını güncelle
+        // Update device type dropdowns
         populateDeviceTypeDropdowns();
     } catch (error) {
         console.error(t('device_types_loading_error'), error);
@@ -250,7 +250,7 @@ function getTranslatedDeviceType(deviceType) {
 }
 
 function populateDeviceTypeDropdowns() {
-    // Edit modal dropdown'ını güncelle
+    // Update edit modal dropdown
     const editDeviceTypeSelect = document.getElementById('editDeviceType');
     if (editDeviceTypeSelect && deviceTypes) {
         editDeviceTypeSelect.innerHTML = `<option value="">${t('select_device_type')}</option>`;
@@ -262,7 +262,7 @@ function populateDeviceTypeDropdowns() {
         });
     }
     
-    // Add device modal dropdown'ını güncelle
+    // Update add device modal dropdown
     const addDeviceTypeSelect = document.getElementById('addDeviceType');
     if (addDeviceTypeSelect && deviceTypes) {
         addDeviceTypeSelect.innerHTML = `<option value="">${t('select_device_type')}</option>`;
@@ -284,22 +284,22 @@ async function checkScanStatus() {
         const response = await fetch('/progress');
         const progress = await response.json();
         
-        // Scan durumuna göre buton durumlarını ayarla
+        // Set button states based on scan status
         if (progress.status === 'scanning') {
             document.getElementById('scanBtn').disabled = true;
             document.getElementById('stopBtn').style.display = 'inline-block';
             document.getElementById('progressContainer').style.display = 'block';
-            // Progress tracking'i başlat
+            // Start progress tracking
             startProgressUpdates();
         } else {
-            // Idle, completed, error, stopped durumları
+            // Idle, completed, error, stopped statuses
             document.getElementById('scanBtn').disabled = false;
             document.getElementById('stopBtn').style.display = 'none';
             document.getElementById('progressContainer').style.display = 'none';
         }
     } catch (error) {
         console.error(t('scan_status_error'), error);
-        // Hata durumunda güvenli taraf için butonları normal duruma getir
+        // In case of error, reset buttons to safe state
         document.getElementById('scanBtn').disabled = false;
         document.getElementById('stopBtn').style.display = 'none';
         document.getElementById('progressContainer').style.display = 'none';
@@ -335,12 +335,12 @@ async function loadVersion() {
         const response = await fetch('/api/version');
         const versionInfo = await response.json();
         
-        // Version bilgisini footer'da güncelle
+        // Update version information in footer
         const versionElement = document.getElementById('appVersion');
         if (versionElement && versionInfo.version) {
             versionElement.textContent = `v${versionInfo.version}`;
             
-            // Tooltip olarak detaylı bilgi ekle
+            // Add detailed information as tooltip
             if (versionInfo.commit_hash || versionInfo.build_time) {
                 let tooltip = [];
                 if (versionInfo.commit_hash) {
@@ -362,12 +362,12 @@ async function loadVersion() {
         }
     } catch (error) {
         console.error(t('version_loading_error'), error);
-        // Hata durumunda default version'u koru
+        // Keep default version in case of error
     }
 }
 
 function displayDevices() {
-    // Aktif görünüme göre ilgili display fonksiyonunu çağır
+    // Call the appropriate display function based on the current view
     switch (currentView) {
         case 'table':
             displayDevicesTable();
@@ -376,7 +376,7 @@ function displayDevices() {
             displayDevicesMap();
             return;
         default:
-            // Card view (varsayılan)
+            // Card view (default)
             displayDevicesCard();
             return;
     }
@@ -396,7 +396,7 @@ function displayDevicesCard() {
         return;
     }
 
-    // Sıralama fonksiyonunu kullan
+    // Use the sorting function
     const sortedDevices = sortDevices(devices);
 
     container.innerHTML = sortedDevices.map(device => `
@@ -475,7 +475,7 @@ function displayDevicesCard() {
     `).join('');
 }
 
-// Enhanced info kontrol fonksiyonu
+// Enhanced info check function
 function hasEnhancedInfo(device) {
     return device.enhanced_comprehensive_info || 
            device.advanced_scan_summary || 
@@ -512,7 +512,7 @@ function filterDevices() {
         // Alias filter
         const matchesAlias = !aliasFilter || device.alias === aliasFilter;
 
-        // Port filter - hem otomatik hem manuel portları kontrol et
+        // Port filter - check both automatic and manual ports
         const matchesPort = !portFilter || (device.open_ports && 
             device.open_ports.some(port => {
                 const portNumber = typeof port === 'object' ? port.port : port;
@@ -522,7 +522,7 @@ function filterDevices() {
         return matchesSearch && matchesDeviceType && matchesStatus && matchesVendor && matchesAlias && matchesPort;
     });
 
-    // Geçici olarak filtrelenmiş cihazları göster
+    // Temporarily show filtered devices
     const originalDevices = devices;
     devices = filteredDevices;
     displayDevices();
@@ -530,18 +530,18 @@ function filterDevices() {
     devices = originalDevices;
 }
 
-// Filtre güncelleme durumlarını takip etmek için değişken
+// Variable to track filter update states
 let filtersUpdateScheduled = false;
 
 function updateFilters() {
-    // Eğer bir güncelleme zaten zamanlanmışsa, tekrar zamanla
+    // If an update is already scheduled, reschedule it
     if (filtersUpdateScheduled) {
         return;
     }
     
     filtersUpdateScheduled = true;
     
-    // Bir sonraki frame'de çalıştır (DOM güncellemelerinin tamamlanması için)
+    // Run in the next frame (to allow DOM updates to complete)
     requestAnimationFrame(() => {
         performFiltersUpdate();
         filtersUpdateScheduled = false;
@@ -549,13 +549,13 @@ function updateFilters() {
 }
 
 function performFiltersUpdate() {
-    // Mevcut seçili değerleri sakla
+    // Save current selected values
     const currentDeviceType = document.getElementById('deviceTypeFilter').value;
     const currentVendor = document.getElementById('vendorFilter').value;
     const currentAlias = document.getElementById('aliasFilter').value;
     const currentPort = document.getElementById('portFilter').value;
 
-    // Device type filter - Sadece bulunan/taranmış cihazların tiplerini göster
+    // Device type filter - Show only types found/scanned
     const deviceTypeFilter = document.getElementById('deviceTypeFilter');
     const detectedTypes = [...new Set(devices.map(d => d.device_type).filter(Boolean))].sort();
     
@@ -567,41 +567,41 @@ function performFiltersUpdate() {
             return `<option value="${type}">${displayText}</option>`;
         }).join('');
     
-    // Seçili değeri geri yükle (sadece hala mevcut ise)
+    // Restore selected value (only if still available)
     if (detectedTypes.includes(currentDeviceType) || currentDeviceType === '') {
         deviceTypeFilter.value = currentDeviceType;
     }
 
-    // Vendor filter - A-Z sıralı, normalized
+    // Vendor filter - Sorted A-Z, normalized
     const vendorFilter = document.getElementById('vendorFilter');
     const vendorOptions = [...new Set(devices.map(d => normalizeVendor(d.vendor)).filter(Boolean))].sort();
     vendorFilter.innerHTML = `<option value="">${t('all')}</option>` + 
         vendorOptions.map(vendor => `<option value="${vendor}">${vendor}</option>`).join('');
     
-    // Seçili değeri geri yükle (sadece hala mevcut ise)
+    // Restore selected value (only if still available)
     if (vendorOptions.includes(currentVendor) || currentVendor === '') {
         vendorFilter.value = currentVendor;
     }
 
-    // Alias filter - A-Z sıralı, boş olmayanlar
+    // Alias filter - Sorted A-Z, non-empty
     const aliasFilter = document.getElementById('aliasFilter');
     const aliasOptions = [...new Set(devices.map(d => d.alias).filter(alias => alias && alias.trim() !== ''))].sort();
     aliasFilter.innerHTML = `<option value="">${t('all')}</option>` + 
         aliasOptions.map(alias => `<option value="${alias}">${alias}</option>`).join('');
     
-    // Seçili değeri geri yükle (sadece hala mevcut ise)
+    // Restore selected value (only if still available)
     if (aliasOptions.includes(currentAlias) || currentAlias === '') {
         aliasFilter.value = currentAlias;
     }
 
-    // Port filter - Hem otomatik hem manuel portları dahil et
+    // Port filter - Include both automatic and manual ports
     const portFilter = document.getElementById('portFilter');
     const allPorts = new Set();
     
-    // Varsayılan portları ekle
+    // Add default ports
     ['22', '80', '443', '8080', '3389', '554', '631'].forEach(port => allPorts.add(port));
     
-    // Cihazlardaki tüm portları topla
+    // Collect all ports from devices
     devices.forEach(device => {
         if (device.open_ports && Array.isArray(device.open_ports)) {
             device.open_ports.forEach(port => {
@@ -613,13 +613,13 @@ function performFiltersUpdate() {
         }
     });
     
-    // Port listesini oluştur
+    // Create port list
     const sortedPorts = Array.from(allPorts).sort((a, b) => parseInt(a) - parseInt(b));
     const portOptions = sortedPorts.map(port => {
         const portNum = parseInt(port);
         let serviceName = '';
         
-        // Bilinen port isimlerini ekle
+        // Add known port names
         const knownPorts = {
             22: 'SSH',
             80: 'HTTP', 
@@ -636,22 +636,22 @@ function performFiltersUpdate() {
     
     portFilter.innerHTML = `<option value="">${t('all')}</option>` + portOptions;
     
-    // Seçili değeri geri yükle (sadece hala mevcut ise)
+    // Restore selected value (only if still available)
     if (Array.from(allPorts).includes(currentPort) || currentPort === '') {
         portFilter.value = currentPort;
     }
 }
 
-// Vendor isimlerini normalize eden fonksiyon
+// Function to normalize vendor names
 function normalizeVendor(vendor) {
     if (!vendor) return vendor;
     
-    // TP-Link varyasyonlarını birleştir
+    // Merge TP-Link variations
     if (vendor.toLowerCase().includes('tp-link')) {
         return 'TP-Link Systems Inc.';
     }
     
-    // Diğer yaygın normalize işlemleri
+    // Other common normalization
     return vendor.trim();
 }
 
@@ -670,16 +670,16 @@ function updateStats() {
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleString('tr-TR');
+    return date.toLocaleString('en-US');
 }
 
 function openDevice(ip) {
-    // IP adresine tıklandığında yeni sekmede aç
+    // Open in a new tab when clicking on the IP address
     window.open(`http://${ip}`, '_blank');
 }
 
 function openPort(ip, port, service) {
-    // Port'a tıklandığında uygun protokolde aç
+    // Open the port with the appropriate protocol
     let url = `http://${ip}:${port}`;
     
     if (port === 443 || port === 8443) {
@@ -710,7 +710,7 @@ function editDevice(ip) {
     document.getElementById('editDeviceType').value = device.device_type || '';
     document.getElementById('editNotes').value = device.notes || '';
     
-    // Manuel portları yükle
+    // Load manual ports
     loadManualPorts(device);
     
     document.getElementById('editModal').style.display = 'block';
@@ -724,7 +724,7 @@ function closeEditModal() {
 async function saveDevice() {
     if (!currentEditingIp) return;
 
-    // Manuel portları topla
+    // Collect manual ports
     const manualPorts = [];
     const portEntries = document.querySelectorAll('#manualPortsContainer .port-entry');
     portEntries.forEach(entry => {
@@ -734,7 +734,7 @@ async function saveDevice() {
         if (portInput.value && portInput.value.trim() !== '') {
             manualPorts.push({
                 port: parseInt(portInput.value),
-                description: descInput.value.trim() || 'Manuel Port'
+                description: descInput.value.trim() || 'Manual Port'
             });
         }
     });
@@ -761,7 +761,7 @@ async function saveDevice() {
 
         if (response.ok) {
             closeEditModal();
-            loadDevices(true); // Cihaz güncellendiğinde filtreleri de güncelle
+            loadDevices(true); // Update filters when the device is updated
             alert(t('device_info_updated'));
         } else {
             const error = await response.json();
@@ -779,29 +779,29 @@ async function analyzeDevice(ip) {
     document.getElementById('analysisModal').style.display = 'block';
     document.getElementById('analysisContent').innerHTML = `
         <div class="analysis-controls" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
-            <button id="closeAnalysisBtn" class="btn btn-secondary" onclick="closeAnalysisModal()">❌ Kapat</button>
-            <button id="backgroundBtn" class="btn btn-info" onclick="continueInBackground()" disabled>🔄 Arkaplanda Devam Et</button>
+            <button id="closeAnalysisBtn" class="btn btn-secondary" onclick="closeAnalysisModal()">❌ Close</button>
+            <button id="backgroundBtn" class="btn btn-info" onclick="continueInBackground()" disabled>🔄 Continue in Background</button>
         </div>
         <div class="analysis-progress">
             <div class="progress-container">
                 <div class="progress-bar">
                     <div id="analysisProgressFill" class="progress-fill" style="width: 0%;"></div>
                 </div>
-                <div id="analysisProgressText" class="progress-text">Analiz başlatılıyor...</div>
+                <div id="analysisProgressText" class="progress-text">Starting analysis...</div>
             </div>
         </div>
         <div id="analysisDetails" class="analysis-details" style="margin-top: 20px;">
             <div class="analysis-log">
-                <h4>📋 İşlem Geçmişi</h4>
+                <h4>📋 Command Log</h4>
                 <div id="commandLog" style="background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.9em;">
-                    <div>⏱️ ${new Date().toLocaleTimeString()} - Analiz başlatılıyor...</div>
+                    <div>⏱️ ${new Date().toLocaleTimeString()} - Starting analysis...</div>
                 </div>
             </div>
         </div>
     `;
 
     try {
-        // Arkaplan analizi başlat
+        // Start background analysis
         const response = await fetch(`/analyze_device_background/${ip}`);
         const result = await response.json();
 
@@ -809,7 +809,7 @@ async function analyzeDevice(ip) {
             currentAnalysisId = result.analysis_id;
             document.getElementById('backgroundBtn').disabled = false;
             
-            // Progress takibi başlat
+            // Start progress tracking
             analysisInterval = setInterval(() => {
                 updateAnalysisProgress();
             }, 1000);
@@ -830,14 +830,14 @@ async function updateAnalysisProgress() {
         const status = await response.json();
 
         if (response.ok) {
-            // Progress bar güncelle
+            // Update progress bar
             document.getElementById('analysisProgressFill').style.width = status.progress + '%';
             document.getElementById('analysisProgressText').textContent = status.message;
 
-            // Komut geçmişini güncelle
+            // Update command log
             const commandLog = document.getElementById('commandLog');
             if (status.commands) {
-                let logContent = `<div>⏱️ ${new Date(status.start_time).toLocaleTimeString()} - Analiz başlatıldı</div>`;
+                let logContent = `<div>⏱️ ${new Date(status.start_time).toLocaleTimeString()} - Analysis started</div>`;
                 
                 status.commands.forEach(cmd => {
                     const statusIcon = cmd.return_code === 0 ? '✅' : '❌';
@@ -852,14 +852,14 @@ async function updateAnalysisProgress() {
                 });
                 
                 if (status.current_command) {
-                    logContent += `<div style="margin-top: 10px; color: #667eea;"><strong>🔄 Çalışıyor: ${status.current_command}</strong></div>`;
+                    logContent += `<div style="margin-top: 10px; color: #667eea;"><strong>🔄 Running: ${status.current_command}</strong></div>`;
                 }
                 
                 commandLog.innerHTML = logContent;
                 commandLog.scrollTop = commandLog.scrollHeight;
             }
 
-            // Analiz tamamlandı
+            // Analysis completed
             if (status.status === 'completed') {
                 clearInterval(analysisInterval);
                 analysisInterval = null;
@@ -868,7 +868,7 @@ async function updateAnalysisProgress() {
                     displayAnalysisResults(status.result, status);
                 }
                 
-                document.getElementById('backgroundBtn').textContent = '✅ Tamamlandı';
+                document.getElementById('backgroundBtn').textContent = '✅ Completed';
                 document.getElementById('backgroundBtn').disabled = true;
             } else if (status.status === 'error') {
                 clearInterval(analysisInterval);
@@ -876,10 +876,10 @@ async function updateAnalysisProgress() {
                 displayAnalysisError(status.error || status.message);
             }
         } else {
-            displayAnalysisError('Analiz durumu alınamadı');
+            displayAnalysisError('Could not get analysis status');
         }
     } catch (error) {
-        displayAnalysisError('Bağlantı hatası: ' + error.message);
+        displayAnalysisError('Connection error: ' + error.message);
     }
 }
 
@@ -891,17 +891,17 @@ function continueInBackground() {
     
     closeAnalysisModal();
     
-    // Bildirim göster
-    showAlert('Analiz arkaplanda devam ediyor. Sonuçları görmek için tekrar "Detaylı Analiz" butonuna tıklayabilirsiniz.', 'info');
+    // Show notification
+    showAlert('Analysis continues in the background. To see the results, click the "Detailed Analysis" button again.', 'info');
 }
 
 function displayAnalysisError(error) {
     document.getElementById('analysisContent').innerHTML = `
         <div style="color: #e74c3c; text-align: center; padding: 20px;">
-            ❌ Analiz hatası: ${error}
+            ❌ Analysis error: ${error}
         </div>
         <div style="text-align: center; margin-top: 15px;">
-            <button class="btn btn-secondary" onclick="closeAnalysisModal()">Kapat</button>
+            <button class="btn btn-secondary" onclick="closeAnalysisModal()">Close</button>
         </div>
     `;
 }
@@ -913,27 +913,27 @@ function displayAnalysisResults(analysis, statusInfo) {
     
     const content = `
         <div class="analysis-controls" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
-            <button class="btn btn-secondary" onclick="closeAnalysisModal()">❌ Kapat</button>
-            <button class="btn btn-success">✅ Analiz Tamamlandı (${duration}s)</button>
+            <button class="btn btn-secondary" onclick="closeAnalysisModal()">❌ Close</button>
+            <button class="btn btn-success">✅ Analysis Completed (${duration}s)</button>
         </div>
         
         <div class="analysis-container">
             <div class="analysis-section">
-                <div class="analysis-title">📊 Analiz Özeti</div>
+                <div class="analysis-title">📊 Analysis Summary</div>
                 <div class="analysis-result">
-                    <strong>Başlangıç:</strong> ${startTime.toLocaleString('tr-TR')}<br>
-                    <strong>Bitiş:</strong> ${endTime.toLocaleString('tr-TR')}<br>
-                    <strong>Süre:</strong> ${duration} saniye<br>
-                    <strong>Çalıştırılan Komut:</strong> ${statusInfo?.commands?.length || 0} adet
+                    <strong>Start:</strong> ${startTime.toLocaleString('en-US')}<br>
+                    <strong>End:</strong> ${endTime.toLocaleString('en-US')}<br>
+                    <strong>Duration:</strong> ${duration} seconds<br>
+                    <strong>Commands Run:</strong> ${statusInfo?.commands?.length || 0}
                 </div>
             </div>
 
             <div class="analysis-section">
-                <div class="analysis-title">🏓 Ping Testi</div>
+                <div class="analysis-title">🏓 Ping Test</div>
                 <div class="analysis-result">
                     ${analysis.ping_test?.success ? 
-                        `✅ Başarılı\n${analysis.ping_test.output}` : 
-                        `❌ Başarısız: ${analysis.ping_test?.error || 'Bilinmeyen hata'}`
+                        `✅ Successful\n${analysis.ping_test.output}` : 
+                        `❌ Failed: ${analysis.ping_test?.error || 'Unknown error'}`
                     }
                 </div>
             </div>
@@ -943,38 +943,39 @@ function displayAnalysisResults(analysis, statusInfo) {
                 <div class="analysis-result">
                     ${analysis.traceroute?.success ? 
                         analysis.traceroute.output : 
-                        `❌ Başarısız: ${analysis.traceroute?.error || 'Bilinmeyen hata'}`
+                        `❌ Failed: ${analysis.traceroute?.error || 'Unknown error'}`
                     }
                 </div>
+
             </div>
 
             <div class="analysis-section">
-                <div class="analysis-title">🔍 Servis Tespiti</div>
+                <div class="analysis-title">🔍 Service Detection</div>
                 <div class="analysis-result">
                     ${Array.isArray(analysis.service_detection) ? 
                         analysis.service_detection.map(service => 
                             `Port ${service.port}: ${service.service} ${service.product} ${service.version}`
-                        ).join('\n') || 'Servis bulunamadı' :
-                        `❌ Hata: ${analysis.service_detection?.error || 'Servis tespiti yapılamadı'}`
+                        ).join('\n') || 'No services found' :
+                        `❌ Error: ${analysis.service_detection?.error || 'Service detection failed'}`
                     }
                 </div>
             </div>
 
             <div class="analysis-section">
-                <div class="analysis-title">💻 İşletim Sistemi Tespiti</div>
+                <div class="analysis-title">💻 Operating System Detection</div>
                 <div class="analysis-result">
                     ${analysis.os_detection?.name ? 
-                        `${analysis.os_detection.name} (${analysis.os_detection.accuracy}% doğruluk)\nAile: ${analysis.os_detection.family}` :
+                        `${analysis.os_detection.name} (${analysis.os_detection.accuracy}% accuracy)\nFamily: ${analysis.os_detection.family}` :
                         analysis.os_detection?.error ? 
-                            `❌ Hata: ${analysis.os_detection.error}` :
-                            'İşletim sistemi tespit edilemedi'
+                            `❌ Error: ${analysis.os_detection.error}` :
+                            'Operating system could not be detected'
                     }
                 </div>
             </div>
             
             ${statusInfo?.commands ? `
             <div class="analysis-section">
-                <div class="analysis-title">📋 Çalıştırılan Komutlar</div>
+                <div class="analysis-title">📋 Commands Run</div>
                 <div class="analysis-result">
                     ${statusInfo.commands.map(cmd => `
                         <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
@@ -1011,9 +1012,9 @@ async function startScan() {
             document.getElementById('scanBtn').disabled = true;
             document.getElementById('stopBtn').style.display = 'inline-block';
             document.getElementById('progressContainer').style.display = 'block';
-            // Toast bildirimi göster
+            // Show toast notification
             showToast(t('scanning_network'), 'info');
-            // Progress tracking'i başlat
+            // Start progress tracking
             startProgressUpdates();
         } else {
             alert(t('scan_start_error') + ': ' + result.error);
@@ -1032,13 +1033,13 @@ async function stopScan() {
         document.getElementById('stopBtn').style.display = 'none';
         document.getElementById('progressContainer').style.display = 'none';
         
-        // Progress interval'ını durdur
+        // Stop progress interval
         if (progressInterval) {
             clearInterval(progressInterval);
             progressInterval = null;
         }
         
-        // Toast bildirimi göster
+        // Show toast notification
         showToast(result.message, 'warning');
     } catch (error) {
         showToast(t('scan_stop_error') + ': ' + error.message, 'error');
@@ -1046,7 +1047,7 @@ async function stopScan() {
 }
 
 function startProgressUpdates() {
-    // Eğer zaten çalışan bir interval varsa, önce onu durdur
+    // If there is already a running interval, stop it first
     if (progressInterval) {
         clearInterval(progressInterval);
     }
@@ -1065,16 +1066,16 @@ function startProgressUpdates() {
                 document.getElementById('scanBtn').disabled = false;
                 document.getElementById('stopBtn').style.display = 'none';
                 
-                // Interval'ı durdur
+                // Stop interval
                 clearInterval(progressInterval);
                 progressInterval = null;
                 
-                // Toast bildirimi göster
+                // Show toast notification
                 showToast(t('scan_complete'), 'success');
                 
                 setTimeout(() => {
                     document.getElementById('progressContainer').style.display = 'none';
-                    // Tarama tamamlandığında cihazları ve filtreleri yükle
+                    // Reload devices and filters when scan is complete
                     loadDevices(true);
                 }, 2000);
             } else if (progress.status === 'error') {
@@ -1083,14 +1084,14 @@ function startProgressUpdates() {
                 document.getElementById('stopBtn').style.display = 'none';
                 document.getElementById('progressContainer').style.display = 'none';
                 
-                // Toast bildirimi göster
+                // Show toast notification
                 showToast(t('error') + ': ' + progress.message, 'error');
                 
-                // Interval'ı durdur
+                // Stop interval
                 clearInterval(progressInterval);
                 progressInterval = null;
             } else if (progress.status === 'idle') {
-                // Eğer durum idle ise ve progress çalışıyorsa, interval'ı durdur
+                // If status is idle and progress is running, stop the interval
                 clearInterval(progressInterval);
                 progressInterval = null;
             }
@@ -1139,7 +1140,7 @@ function importData() {
                 
                 if (response.ok) {
                     alert(result.message);
-                    loadDevices(true); // Import sonrası filtreleri de güncelle
+                    loadDevices(true); // Update filters after import
                 } else {
                     alert(t('import_error') + ': ' + result.error);
                 }
@@ -1152,7 +1153,7 @@ function importData() {
 }
 
 async function sanitizeData() {
-    // Kullanıcıdan onay al
+    // Ask user for confirmation
     if (!confirm(t('confirm_data_clean'))) {
         return;
     }
@@ -1171,7 +1172,7 @@ async function sanitizeData() {
         
         if (response.ok && result.success) {
             showToast(t('data_cleaned_success') + ': ' + result.backup_created, 'success');
-            // Verileri yeniden yükle
+            // Reload data
             await loadDevices(true);
         } else {
             showToast(t('data_clean_error') + ': ' + result.error, 'error');
@@ -1181,7 +1182,7 @@ async function sanitizeData() {
     }
 }
 
-// Modal dışına tıklandığında kapat
+// Close modal when clicking outside
 window.onclick = function(event) {
     const editModal = document.getElementById('editModal');
     const analysisModal = document.getElementById('analysisModal');
@@ -1205,17 +1206,17 @@ async function startBulkAnalysis() {
         return;
     }
     
-    // Unified modal'da çağrılıyorsa, doğrudan analizi başlat
+    // If called from unified modal, start analysis directly
     if (window.unifiedAnalysisMode) {
         await startBulkAnalysisActual();
         return;
     }
     
-    // Birleşik modal'ı kullan
+    // Use unified modal
     if (typeof showBulkAnalysisModal === 'function') {
         showBulkAnalysisModal();
     } else {
-        // Fallback: eski sistem
+        // Fallback: old system
         startBulkAnalysisFallback();
     }
 }
@@ -1224,21 +1225,21 @@ async function startBulkAnalysisActual() {
     try {
         bulkAnalysisRunning = true;
         
-        // UI durumunu güncelle
+        // Update UI state
         updateBulkAnalysisButtons(true);
         
-        // Yeni API'yi kullanarak toplu detaylı analizi başlat
+        // Start bulk detailed analysis using new API
         const response = await fetch('/detailed_analysis');
         const result = await response.json();
         
         if (response.ok) {
             showToast(t('bulk_analysis_started'), 'success');
             
-            // Progress tracking başlat
+            // Start progress tracking
             monitorDetailedAnalysisStatus();
             
         } else {
-            throw new Error(result.error || 'Bilinmeyen hata');
+            throw new Error(result.error || 'Unknown error');
         }
     } catch (error) {
         bulkAnalysisRunning = false;
@@ -1248,7 +1249,7 @@ async function startBulkAnalysisActual() {
 }
 
 function updateBulkAnalysisButtons(isRunning) {
-    // Unified modal içindeki butonları güncelle
+    // Update buttons inside unified modal
     const sessionKey = 'bulk';
     const startBtn = document.getElementById(`startBtn_${sessionKey}`);
     const stopBtn = document.getElementById(`stopBtn_${sessionKey}`);
@@ -1267,7 +1268,7 @@ function updateBulkAnalysisButtons(isRunning) {
         minimizeBtn.style.display = isRunning ? 'inline-block' : 'none';
     }
     
-    // Progress bölümünü göster/gizle
+    // Show/hide progress section
     const progressDiv = document.getElementById('analysisProgress');
     if (progressDiv) {
         progressDiv.style.display = isRunning ? 'block' : 'none';
@@ -1276,7 +1277,7 @@ function updateBulkAnalysisButtons(isRunning) {
 
 async function startBulkAnalysisFallback() {
     try {
-        // Yeni API'yi kullanarak toplu detaylı analizi başlat
+        // Start bulk detailed analysis using new API
         const response = await fetch('/detailed_analysis');
         const result = await response.json();
         
@@ -1284,32 +1285,32 @@ async function startBulkAnalysisFallback() {
             bulkAnalysisRunning = true;
             showToast(t('bulk_analysis_started'), 'success');
             
-            // Progress modal göster
+            // Show progress modal
             document.getElementById('analysisModal').style.display = 'block';
             document.getElementById('analysisContent').innerHTML = `
                 <div class="analysis-controls" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
-                    <button class="btn btn-info" onclick="hideBulkAnalysisModal()">📱 Arkaplanda Devam Et</button>
-                    <button class="btn btn-success" onclick="loadDevices(true)">🔄 Verileri Yenile</button>
+                    <button class="btn btn-info" onclick="hideBulkAnalysisModal()">📱 Continue in Background</button>
+                    <button class="btn btn-success" onclick="loadDevices(true)">🔄 Refresh Data</button>
                 </div>
                 <div class="analysis-progress">
                     <div class="progress-container">
                         <div class="progress-bar">
                             <div id="bulkAnalysisProgressFill" class="progress-fill" style="width: 0%;"></div>
                         </div>
-                        <div id="bulkAnalysisProgressText" class="progress-text">Detaylı analiz başlatılıyor...</div>
+                        <div id="bulkAnalysisProgressText" class="progress-text">Starting detailed analysis...</div>
                     </div>
                 </div>
                 <div id="bulkAnalysisDetails" class="analysis-details" style="margin-top: 20px;">
                     <div class="analysis-log">
-                        <h4>📋 Detaylı Analiz Durumu</h4>
+                        <h4>📋 Detailed Analysis Status</h4>
                         <div id="bulkAnalysisLog" style="background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.9em;">
-                            <div>⏱️ ${new Date().toLocaleTimeString()} - Toplu detaylı analiz başlatıldı</div>
+                            <div>⏱️ ${new Date().toLocaleTimeString()} - Bulk detailed analysis started</div>
                         </div>
                     </div>
                 </div>
             `;
             
-            // Analiz durumunu takip et
+            // Monitor analysis status
             monitorDetailedAnalysisStatus();
             
         } else {
@@ -1352,7 +1353,7 @@ function updateBulkAnalysisLog(message) {
         log.scrollTop = log.scrollHeight;
     }
     
-    // Unified modal - device-access.js'deki addVerboseLog fonksiyonunu kullan
+    // Unified modal - use addVerboseLog function from device-access.js
     if (typeof addVerboseLog === 'function') {
         addVerboseLog(message, 'bulk');
     }
@@ -1379,12 +1380,12 @@ async function monitorBulkAnalysisResults() {
                         bulkAnalysisResults[ip].status = 'completed';
                         bulkAnalysisResults[ip].result = status;
                         completedCount++;
-                        updateBulkAnalysisLog(`✅ ${ip} analizi tamamlandı`);
+                        updateBulkAnalysisLog(`✅ ${ip} analysis completed`);
                     } else if (status.status === 'error') {
                         bulkAnalysisResults[ip].status = 'error';
                         bulkAnalysisResults[ip].error = status.error;
                         completedCount++;
-                        updateBulkAnalysisLog(`❌ ${ip} analiz hatası: ${status.error}`);
+                        updateBulkAnalysisLog(`❌ ${ip} analysis error: ${status.error}`);
                     } else {
                         allCompleted = false;
                     }
@@ -1392,25 +1393,25 @@ async function monitorBulkAnalysisResults() {
                     bulkAnalysisResults[ip].status = 'error';
                     bulkAnalysisResults[ip].error = error.message;
                     completedCount++;
-                    updateBulkAnalysisLog(`❌ ${ip} durum kontrolü hatası: ${error.message}`);
+                    updateBulkAnalysisLog(`❌ ${ip} status check error: ${error.message}`);
                 }
             } else {
                 completedCount++;
             }
         }
         
-        updateBulkAnalysisProgress((completedCount / totalCount) * 100, `${completedCount}/${totalCount} analiz tamamlandı`);
+        updateBulkAnalysisProgress((completedCount / totalCount) * 100, `${completedCount}/${totalCount} analyses completed`);
         
         if (allCompleted) {
             clearInterval(checkInterval);
             bulkAnalysisRunning = false;
-            updateBulkAnalysisLog(`🎉 Toplu analiz tamamlandı! ${completedCount} cihaz analiz edildi.`);
-            updateBulkAnalysisProgress(100, 'Toplu analiz tamamlandı');
+            updateBulkAnalysisLog(`🎉 Bulk analysis completed! ${completedCount} devices analyzed.`);
+            updateBulkAnalysisProgress(100, 'Bulk analysis completed');
             
-            // Toast bildirimi göster
+            // Show toast notification
             showToast(t('bulk_analysis_completed') + '! ' + completedCount + ' ' + t('devices_analyzed'), 'success');
         }
-    }, 3000); // Her 3 saniyede kontrol et
+    }, 3000); // Check every 3 seconds
 }
 
 function monitorDetailedAnalysisStatus() {
@@ -1420,16 +1421,16 @@ function monitorDetailedAnalysisStatus() {
             const status = await response.json();
             
             if (status.status === 'analyzing') {
-                // Yeni mesaj varsa logla
+                // Log new message if available
                 if (status.message !== lastAnalysisMessage) {
                     updateBulkAnalysisLog(`🔄 ${status.message}`);
                     lastAnalysisMessage = status.message;
                 }
                 
-                // Arkaplan göstergesi güncelle
+                // Update background indicator
                 updateBackgroundIndicator(status.message);
                 
-                // Progress simülasyonu (gerçek progress backend'den gelse daha iyi olur)
+                // Simulate progress (real progress should come from backend)
                 const currentProgress = document.getElementById('bulkAnalysisProgressFill')?.style.width || '0%';
                 const progressValue = parseFloat(currentProgress.replace('%', '')) || 0;
                 if (progressValue < 90) {
@@ -1439,17 +1440,17 @@ function monitorDetailedAnalysisStatus() {
                 clearInterval(checkInterval);
                 bulkAnalysisRunning = false;
                 updateBulkAnalysisLog(`🎉 ${status.message}`);
-                updateBulkAnalysisProgress(100, 'Detaylı analiz tamamlandı');
+                updateBulkAnalysisProgress(100, 'Detailed analysis completed');
                 showToast(t('bulk_analysis_completed'), 'success');
                 hideBackgroundIndicator();
                 
-                // Unified modal butonlarını güncelle
+                // Update unified modal buttons
                 updateBulkAnalysisButtons(false);
                 if (typeof updateUnifiedAnalysisButtons === 'function') {
                     updateUnifiedAnalysisButtons('bulk', false);
                 }
                 
-                // Cihaz listesini yenile
+                // Refresh device list
                 await loadDevices(true);
                 
             } else if (status.status === 'error') {
@@ -1459,47 +1460,47 @@ function monitorDetailedAnalysisStatus() {
                 showToast(t('analysis_error') + ': ' + status.message, 'error');
                 hideBackgroundIndicator();
                 
-                // Unified modal butonlarını güncelle
+                // Update unified modal buttons
                 updateBulkAnalysisButtons(false);
                 if (typeof updateUnifiedAnalysisButtons === 'function') {
                     updateUnifiedAnalysisButtons('bulk', false);
                 }
             }
         } catch (error) {
-            console.error('Analiz durumu kontrol hatası:', error);
+            console.error('Analysis status check error:', error);
         }
-    }, 1500); // Daha sık kontrol et (1.5 saniye)
+    }, 1500); // Check more frequently (1.5 seconds)
 }
 
 function stopBulkAnalysis() {
     bulkAnalysisRunning = false;
-    updateBulkAnalysisLog(`⏹️ Toplu analiz durduruldu`);
+    updateBulkAnalysisLog(`⏹️ Bulk analysis stopped`);
     showToast(t('bulk_analysis_stopped'), 'warning');
 }
 
 function hideBulkAnalysisModal() {
     document.getElementById('analysisModal').style.display = 'none';
     
-    // Arkaplan analizin devam edip etmediğini kontrol et
+    // Check if background analysis is still running
     if (bulkAnalysisRunning) {
         showBackgroundIndicator();
     }
 }
 
-// Detaylı Cihaz Analizi sayfasını aç - device-access.js ile uyumlu
+// Open Detailed Device Analysis page - compatible with device-access.js
 function openSingleDeviceAnalysisPage(ip) {
-    // device-access.js'teki showSingleDeviceAnalysisModal fonksiyonunu çağır
+    // Call showSingleDeviceAnalysisModal function from device-access.js
     if (typeof showSingleDeviceAnalysisModal === 'function') {
         showSingleDeviceAnalysisModal(ip);
     } else {
-        // Fallback: eski analiz fonksiyonunu kullan
+        // Fallback: use old analysis function
         analyzeSingleDeviceFallback(ip);
     }
 }
 
 async function analyzeSingleDeviceFallback(ip) {
     try {
-        // Enhanced analysis endpoint'ini kullan
+        // Use enhanced analysis endpoint
         const response = await fetch(`/enhanced_analysis/${ip}`, {
             method: 'POST'
         });
@@ -1508,10 +1509,10 @@ async function analyzeSingleDeviceFallback(ip) {
         if (response.ok) {
             showToast(`🔬 ${ip} ${t('advanced_analysis_started')}`, 'success');
             
-            // Progress indicator göster
-            updateBackgroundIndicator('Gelişmiş analiz yapılıyor...', true);
+            // Show progress indicator
+            updateBackgroundIndicator('Performing enhanced analysis...', true);
             
-            // Analiz durumunu takip et
+            // Monitor analysis status
             const checkInterval = setInterval(async () => {
                 try {
                     const statusResponse = await fetch(`/enhanced_analysis_status/${ip}`);
@@ -1519,19 +1520,19 @@ async function analyzeSingleDeviceFallback(ip) {
                     
                     if (status.status === 'completed') {
                         clearInterval(checkInterval);
-                        updateBackgroundIndicator('Gelişmiş analiz tamamlandı', false);
+                        updateBackgroundIndicator('Enhanced analysis completed', false);
                         showToast(`🎉 ${ip} ${t('advanced_analysis_completed')}`, 'success');
-                        await loadDevices(true); // Cihaz listesini yenile
+                        await loadDevices(true); // Refresh device list
                     } else if (status.status === 'error') {
                         clearInterval(checkInterval);
-                        updateBackgroundIndicator('Analiz hatası', false);
+                        updateBackgroundIndicator('Analysis error', false);
                         showToast(`❌ ${ip} ${t('analysis_error')}: ${status.message}`, 'error');
                     } else if (status.status === 'analyzing' && status.message) {
-                        // Progress mesajını güncelle
+                        // Update progress message
                         updateBackgroundIndicator(status.message, true);
                     }
                 } catch (error) {
-                    console.error('Tek cihaz analiz durumu kontrol hatası:', error);
+                    console.error('Single device analysis status check error:', error);
                 }
             }, 2000);
             
@@ -1548,8 +1549,8 @@ function addPortEntry() {
     const newEntry = document.createElement('div');
     newEntry.className = 'port-entry';
     newEntry.innerHTML = `
-        <input type="number" placeholder="Port (örn: 80)" class="port-input" min="1" max="65535">
-        <input type="text" placeholder="Açıklama (örn: HTTP)" class="port-desc-input">
+        <input type="number" placeholder="Port (e.g., 80)" class="port-input" min="1" max="65535">
+        <input type="text" placeholder="Description (e.g., HTTP)" class="port-desc-input">
         <button type="button" class="btn btn-danger btn-small" onclick="removePortEntry(this)">🗑️</button>
     `;
     container.appendChild(newEntry);
@@ -1563,36 +1564,36 @@ function removePortEntry(button) {
 }
 
 function showAlert(message, type = 'info') {
-    // Basit alert gösterimi - daha gelişmiş notification sistemi eklenebilir
+    // Simple alert display - more advanced notification system can be added
     alert(message);
 }
 
 function loadManualPorts(device) {
     const container = document.getElementById('manualPortsContainer');
     
-    // Container'ı temizle (sadece ilk entry'yi bırak)
+    // Clear container (leave only the first entry)
     container.innerHTML = `
         <div class="port-entry">
-            <input type="number" placeholder="Port (örn: 80)" class="port-input" min="1" max="65535">
-            <input type="text" placeholder="Açıklama (örn: HTTP)" class="port-desc-input">
+            <input type="number" placeholder="Port (e.g., 80)" class="port-input" min="1" max="65535">
+            <input type="text" placeholder="Description (e.g., HTTP)" class="port-desc-input">
             <button type="button" class="btn btn-danger btn-small" onclick="removePortEntry(this)">🗑️</button>
         </div>
     `;
     
-    // Mevcut manuel portları yükle
+    // Load existing manual ports
     if (device.open_ports && Array.isArray(device.open_ports)) {
         const manualPorts = device.open_ports.filter(port => {
             return typeof port === 'object' && port.manual === true;
         });
         
         if (manualPorts.length > 0) {
-            // İlk manuel port için mevcut entry'yi kullan
+            // Use the existing entry for the first manual port
             const firstEntry = container.querySelector('.port-entry');
             const firstPort = manualPorts[0];
             firstEntry.querySelector('.port-input').value = firstPort.port;
             firstEntry.querySelector('.port-desc-input').value = firstPort.description || '';
             
-            // Kalan portlar için yeni entry'ler ekle
+            // Add new entries for the remaining ports
             for (let i = 1; i < manualPorts.length; i++) {
                 const port = manualPorts[i];
                 addPortEntry();
@@ -1604,27 +1605,27 @@ function loadManualPorts(device) {
     }
 }
 
-// View Management - Görünüm yönetimi
-let currentView = 'card'; // Varsayılan görünüm
+// View Management
+let currentView = 'card'; // Default view
 
 function switchView(view) {
-    // Önceki aktif butondan active class'ını kaldır (hem eski hem yeni butonlar için)
+    // Remove active class from previous button (for both old and new buttons)
     document.querySelectorAll('.view-btn, .view-btn-vertical').forEach(btn => btn.classList.remove('active'));
     
-    // Yeni aktif butona active class'ı ekle
+    // Add active class to the new button
     document.getElementById(`view${view.charAt(0).toUpperCase() + view.slice(1)}`).classList.add('active');
     
-    // Görünümleri gizle/göster
+    // Hide/show views
     document.getElementById('devicesContainer').style.display = view === 'card' ? 'grid' : 'none';
     document.getElementById('tableContainer').style.display = view === 'table' ? 'block' : 'none';
     document.getElementById('mapContainer').style.display = view === 'map' ? 'block' : 'none';
     
     currentView = view;
     
-    // Seçilen görünüme göre verileri yükle
+    // Load data based on the selected view
     switch (view) {
         case 'card':
-            displayDevices(); // Mevcut card görünümü
+            displayDevices(); // Current card view
             break;
         case 'table':
             displayDevicesTable();
@@ -1642,15 +1643,15 @@ function displayDevicesTable() {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="8" style="text-align: center; padding: 40px; color: #6c757d;">
-                    <div>📡 Henüz cihaz bulunamadı</div>
-                    <div style="margin-top: 10px; font-size: 0.9em;">Ağınızı taramak için "Taramayı Başlat" butonuna tıklayın</div>
+                    <div>📡 No devices found yet</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">Click "Start Scan" to scan your network</div>
                 </td>
             </tr>
         `;
         return;
     }
 
-    // Sıralama fonksiyonunu kullan
+    // Use the sorting function
     const sortedDevices = sortDevices(devices);
 
     tableBody.innerHTML = sortedDevices.map(device => {
@@ -1673,7 +1674,7 @@ function displayDevicesTable() {
                     </div>
                 </td>
                 <td class="table-cell">${device.alias || '-'}</td>
-                <td class="table-cell" title="${device.vendor || 'Bilinmeyen'}">${truncateText(device.vendor || 'Bilinmeyen', 20)}</td>
+                <td class="table-cell" title="${device.vendor || 'Unknown'}">${truncateText(device.vendor || 'Unknown', 20)}</td>
                 <td class="table-cell">
                     <span class="device-type-badge">
                         ${getDeviceIcon(device.device_type)} ${getTranslatedDeviceType(device.device_type)}
@@ -1683,7 +1684,7 @@ function displayDevicesTable() {
                     ${device.mac && device.mac !== 'N/A' ? `
                         <div class="mac-container">
                             <span class="mac-address" title="${device.mac}">${truncateText(device.mac, 17)}</span>
-                            <button class="copy-mac-btn" onclick="copyMacAddress('${device.mac}', this); event.stopPropagation();" title="MAC adresini kopyala">
+                            <button class="copy-mac-btn" onclick="copyMacAddress('${device.mac}', this); event.stopPropagation();" title="Copy MAC address">
                                 📋
                             </button>
                         </div>
@@ -1698,9 +1699,9 @@ function displayDevicesTable() {
                 <td class="table-cell">
                     <div class="device-actions">
                         <button class="btn btn-primary btn-small" onclick="openEnhancedEditModal('${device.ip}'); event.stopPropagation();" title="Edit">✏️</button>
-                        <button class="btn btn-warning btn-small" onclick="openSingleDeviceAnalysisPage('${device.ip}'); event.stopPropagation();" title="Gelişmiş Analiz">🔬</button>
+                        <button class="btn btn-warning btn-small" onclick="openSingleDeviceAnalysisPage('${device.ip}'); event.stopPropagation();" title="Advanced Analysis">🔬</button>
                         ${hasEnhancedInfo(device) ? 
-                            `<button class="btn btn-success btn-small" onclick="openEnhancedDetailsModal(${JSON.stringify(device).replace(/"/g, '&quot;')}); event.stopPropagation();" title="Detaylı Analiz Sonuçları">📊</button>` : 
+                            `<button class="btn btn-success btn-small" onclick="openEnhancedDetailsModal(${JSON.stringify(device).replace(/"/g, '&quot;')}); event.stopPropagation();" title="Detailed Analysis Results">📊</button>` : 
                             ''
                         }
                     </div>
@@ -1716,14 +1717,14 @@ function displayDevicesMap() {
     if (devices.length === 0) {
         mapContainer.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #6c757d;">
-                <div>📡 Henüz cihaz bulunamadı</div>
-                <div style="margin-top: 10px; font-size: 0.9em;">Ağınızı taramak için "Taramayı Başlat" butonuna tıklayın</div>
+                <div>📡 No devices found yet</div>
+                <div style="margin-top: 10px; font-size: 0.9em;">Click "Start Scan" to scan your network</div>
             </div>
         `;
         return;
     }
 
-    // Network segment'lerini grupla (ilk 3 oktet bazında)
+    // Group network segments (based on the first 3 octets)
     const networkSegments = {};
     devices.forEach(device => {
         const segment = device.ip.split('.').slice(0, 3).join('.');
@@ -1744,7 +1745,7 @@ function displayDevicesMap() {
             <div class="network-segment">
                 <div class="segment-header">
                     <h4>🌐 Network: ${segment}.0/24</h4>
-                    <span class="device-count">${segmentDevices.length} cihaz</span>
+                    <span class="device-count">${segmentDevices.length} devices</span>
                 </div>
                 
                 <div class="segment-content">
@@ -1798,9 +1799,9 @@ function createMapDeviceCard(device) {
 }
 
 function selectTableRow(row) {
-    // Önceki seçili satırdan seçimi kaldır
+    // Remove selection from previous row
     document.querySelectorAll('.table-row').forEach(r => r.classList.remove('selected'));
-    // Yeni satırı seçili yap
+    // Select the new row
     row.classList.add('selected');
 }
 
@@ -1819,15 +1820,15 @@ function formatRelativeTime(dateString) {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
     
-    if (diffMins < 1) return 'Az önce';
-    if (diffMins < 60) return `${diffMins}dk önce`;
-    if (diffHours < 24) return `${diffHours}sa önce`;
-    if (diffDays < 7) return `${diffDays}g önce`;
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
     
-    return date.toLocaleDateString('tr-TR');
+    return date.toLocaleDateString('en-US');
 }
 
-// Toast Notification Sistemi
+// Toast Notification System
 function createToastContainer() {
     let container = document.querySelector('.toast-container');
     if (!container) {
@@ -1859,7 +1860,7 @@ function showToast(message, type = 'info', duration = 5000) {
     
     container.appendChild(toast);
     
-    // Otomatik kaldırma
+    // Auto-remove
     setTimeout(() => {
         removeToast(toast);
     }, duration);
@@ -1881,11 +1882,11 @@ function removeToast(toast) {
 // MAC Address Copy Functionality
 async function copyMacAddress(macAddress, buttonElement) {
     try {
-        // Modern browsers - clipboard API kullan
+        // Modern browsers - use clipboard API
         if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(macAddress);
         } else {
-            // Fallback - eski tarayıcılar için
+            // Fallback - for older browsers
             const textArea = document.createElement('textarea');
             textArea.value = macAddress;
             textArea.style.position = 'fixed';
@@ -1928,11 +1929,11 @@ async function copyMacAddress(macAddress, buttonElement) {
     }
 }
 
-// Arkaplan analiz göstergesi fonksiyonları
+// Background analysis indicator functions
 function showBackgroundIndicator() {
-    if (backgroundAnalysisIndicator) return; // Zaten gösteriliyor
+    if (backgroundAnalysisIndicator) return; // Already displayed
     
-    // Arkaplan göstergesi oluştur
+    // Create background indicator
     backgroundAnalysisIndicator = document.createElement('div');
     backgroundAnalysisIndicator.id = 'backgroundAnalysisIndicator';
     backgroundAnalysisIndicator.style.cssText = `
@@ -1957,18 +1958,18 @@ function showBackgroundIndicator() {
     backgroundAnalysisIndicator.innerHTML = `
         <div style="display: flex; align-items: center; gap: 10px;">
             <div style="width: 8px; height: 8px; background: #28a745; border-radius: 50%; animation: blink 1s infinite;"></div>
-            <span>🔬 Detaylı Analiz Devam Ediyor</span>
-            <small style="opacity: 0.8; font-size: 12px;">Açmak için tıklayın</small>
+            <span>🔬 Detailed Analysis In Progress</span>
+            <small style="opacity: 0.8; font-size: 12px;">Click to open</small>
         </div>
     `;
     
-    // Tıklandığında modal'ı aç
+    // Open modal on click
     backgroundAnalysisIndicator.addEventListener('click', () => {
         document.getElementById('analysisModal').style.display = 'block';
         hideBackgroundIndicator();
     });
     
-    // Hover efekti
+    // Hover effect
     backgroundAnalysisIndicator.addEventListener('mouseenter', () => {
         backgroundAnalysisIndicator.style.transform = 'scale(1.05)';
     });
@@ -1979,7 +1980,7 @@ function showBackgroundIndicator() {
     
     document.body.appendChild(backgroundAnalysisIndicator);
     
-    // CSS animasyonları ekle
+    // Add CSS animations
     if (!document.getElementById('backgroundIndicatorStyles')) {
         const styles = document.createElement('style');
         styles.id = 'backgroundIndicatorStyles';
@@ -2009,23 +2010,23 @@ function updateBackgroundIndicator(message) {
     if (backgroundAnalysisIndicator) {
         const messageDiv = backgroundAnalysisIndicator.querySelector('span');
         if (messageDiv) {
-            // IP adresini vurgula
+            // Highlight IP address
             const ipMatch = message.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/);
             if (ipMatch) {
-                messageDiv.innerHTML = `🔬 Analiz: <strong>${ipMatch[0]}</strong>`;
+                messageDiv.innerHTML = `🔬 Analysis: <strong>${ipMatch[0]}</strong>`;
             } else {
-                messageDiv.textContent = '🔬 Detaylı Analiz Devam Ediyor';
+                messageDiv.textContent = '🔬 Detailed Analysis In Progress';
             }
         }
     }
 }
 
-// Cihaz Yönetimi Modal Fonksiyonları
+// Device Management Modal Functions
 function showDeviceManagementModal() {
     document.getElementById('deviceManagementModal').style.display = 'block';
-    // Device type dropdowns'ını güncelle
+    // Update device type dropdowns
     populateDeviceTypeDropdowns();
-    // Cihaz listesini yükle
+    // Load device list
     loadDevicesForManagement();
 }
 
@@ -2034,14 +2035,14 @@ function closeDeviceManagementModal() {
 }
 
 function switchDeviceManagementTab(tab) {
-    // Tab butonlarını güncelle
+    // Update tab buttons
     const tabButtons = document.querySelectorAll('.device-management-tabs .tab-button');
     tabButtons.forEach(btn => btn.classList.remove('active'));
     
-    // Aktif tab butonunu işaretle
+    // Mark active tab button
     event.target.classList.add('active');
     
-    // Tab içeriklerini gizle/göster
+    // Hide/show tab contents
     const addTab = document.getElementById('addDeviceTab');
     const manageTab = document.getElementById('manageDeviceTab');
     
@@ -2055,7 +2056,7 @@ function switchDeviceManagementTab(tab) {
     }
 }
 
-// Cihaz ekleme formu submit
+// Device add form submit
 document.addEventListener('DOMContentLoaded', function() {
     const addDeviceForm = document.getElementById('addDeviceForm');
     if (addDeviceForm) {
@@ -2088,7 +2089,7 @@ async function addManualDevice() {
         return;
     }
     
-    // IP format kontrolü
+    // IP format check
     const ipPattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     if (!ipPattern.test(formData.ip)) {
         showToast(t('invalid_ip_format'), 'error');
@@ -2109,9 +2110,9 @@ async function addManualDevice() {
         if (response.ok && result.success) {
             showToast(t('device_added_success') + ': ' + formData.alias, 'success');
             clearAddDeviceForm();
-            // Ana listede güncelleme yap
+            // Update main list
             loadDevices(true);
-            // Yönetim listesini güncelle
+            // Update management list
             loadDevicesForManagement();
         } else {
             showToast(t('device_add_error') + ': ' + result.message, 'error');
@@ -2135,15 +2136,15 @@ function loadDevicesForManagement() {
     const tableBody = document.getElementById('deviceTableBody');
     if (!tableBody) return;
     
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">📡 Cihazlar yükleniyor...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">📡 Loading devices...</td></tr>';
     
-    // Ana devices listesini kullan
+    // Use main devices list
     if (devices && devices.length > 0) {
         let html = '';
         devices.forEach(device => {
             const isOnline = device.status === 'online';
             const statusIcon = isOnline ? '🟢' : '🔴';
-            const statusText = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+            const statusText = isOnline ? 'Online' : 'Offline';
             
             html += `
                 <tr style="border-bottom: 1px solid #eee;">
@@ -2153,10 +2154,10 @@ function loadDevicesForManagement() {
                     <td style="padding: 10px; border: 1px solid #ddd;">${device.vendor || '-'}</td>
                     <td style="padding: 10px; border: 1px solid #ddd;">${statusIcon}</td>
                     <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
-                        <button class="btn btn-primary" onclick="editDeviceFromManagement('${device.ip}')" title="Düzenle" style="margin-right: 5px; padding: 4px 8px; font-size: 12px;">
+                        <button class="btn btn-primary" onclick="editDeviceFromManagement('${device.ip}')" title="Edit" style="margin-right: 5px; padding: 4px 8px; font-size: 12px;">
                             ✏️
                         </button>
-                        <button class="btn btn-danger" onclick="confirmDeleteDevice('${device.ip}')" title="Sil" style="padding: 4px 8px; font-size: 12px;">
+                        <button class="btn btn-danger" onclick="confirmDeleteDevice('${device.ip}')" title="Delete" style="padding: 4px 8px; font-size: 12px;">
                             🗑️
                         </button>
                     </td>
@@ -2164,9 +2165,9 @@ function loadDevicesForManagement() {
             `;
         });
         
-        tableBody.innerHTML = html || '<tr><td colspan="6" style="text-align: center; padding: 20px;">Henüz cihaz bulunamadı.</td></tr>';
+        tableBody.innerHTML = html || '<tr><td colspan="6" style="text-align: center; padding: 20px;">No devices found yet.</td></tr>';
     } else {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Henüz cihaz bulunamadı.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No devices found yet.</td></tr>';
     }
 }
 
@@ -2178,13 +2179,13 @@ function filterDevicesForManagement() {
     const tableBody = document.getElementById('deviceTableBody');
     if (!tableBody) return;
     
-    // Eğer arama terimi yoksa tüm cihazları göster
+    // If no search term, show all devices
     if (!searchTerm) {
         loadDevicesForManagement();
         return;
     }
     
-    // Arama terimine göre cihazları filtrele
+    // Filter devices by search term
     const filteredDevices = devices.filter(device => {
         const ip = (device.ip || '').toLowerCase();
         const alias = (device.alias || '').toLowerCase();
@@ -2199,13 +2200,13 @@ function filterDevicesForManagement() {
                deviceType.includes(searchTerm);
     });
     
-    // Filtrelenmiş sonuçları göster
+    // Show filtered results
     if (filteredDevices.length > 0) {
         let html = '';
         filteredDevices.forEach(device => {
             const isOnline = device.status === 'online';
             const statusIcon = isOnline ? '🟢' : '🔴';
-            const statusText = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+            const statusText = isOnline ? 'Online' : 'Offline';
             
             html += `
                 <tr style="border-bottom: 1px solid #eee;">
@@ -2215,10 +2216,10 @@ function filterDevicesForManagement() {
                     <td style="padding: 10px; border: 1px solid #ddd;">${device.vendor || '-'}</td>
                     <td style="padding: 10px; border: 1px solid #ddd;">${statusIcon} ${statusText}</td>
                     <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
-                        <button class="btn btn-primary" onclick="editDeviceFromManagement('${device.ip}')" title="Düzenle" style="margin-right: 5px; padding: 4px 8px; font-size: 12px;">
+                        <button class="btn btn-primary" onclick="editDeviceFromManagement('${device.ip}')" title="Edit" style="margin-right: 5px; padding: 4px 8px; font-size: 12px;">
                             ✏️
                         </button>
-                        <button class="btn btn-danger" onclick="confirmDeleteDevice('${device.ip}')" title="Sil" style="padding: 4px 8px; font-size: 12px;">
+                        <button class="btn btn-danger" onclick="confirmDeleteDevice('${device.ip}')" title="Delete" style="padding: 4px 8px; font-size: 12px;">
                             🗑️
                         </button>
                     </td>
@@ -2228,11 +2229,11 @@ function filterDevicesForManagement() {
         
         tableBody.innerHTML = html;
     } else {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">🔍 Arama kriterlerine uygun cihaz bulunamadı.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">🔍 No devices found matching search criteria.</td></tr>';
     }
 }
 
-// Edit butonuna tıklandığında mevcut edit modal'ını aç
+// Edit button click opens existing edit modal
 function editDeviceFromManagement(ip) {
     const device = devices.find(d => d.ip === ip);
     if (!device) {
@@ -2240,10 +2241,10 @@ function editDeviceFromManagement(ip) {
         return;
     }
     
-    // Cihaz yönetimi modal'ını kapat
+    // Close device management modal
     closeDeviceManagementModal();
     
-    // Ana sayfa edit modal'ını aç (main.js'deki mevcut editDevice fonksiyonunu kullan)
+    // Open main page edit modal (use existing editDevice function in main.js)
     editDevice(ip);
 }
 
@@ -2266,9 +2267,9 @@ async function deleteDevice(ip) {
         
         if (response.ok && result.success) {
             showToast(t('device_deleted_success'), 'success');
-            // Ana listede güncelleme yap
+            // Update main list
             await loadDevices(true);
-            // Yönetim listesini güncelle
+            // Update management list
             loadDevicesForManagement();
         } else {
             showToast(t('device_delete_error') + ': ' + result.message, 'error');
@@ -2278,21 +2279,21 @@ async function deleteDevice(ip) {
     }
 }
 
-// Aktif analiz işlemlerini restore et
+// Restore active analysis processes
 async function restoreActiveAnalyses() {
     try {
         const response = await fetch('/get_active_analyses');
         const activeAnalyses = await response.json();
         
         if (response.ok && Object.keys(activeAnalyses).length > 0) {
-            console.log('Aktif analiz işlemleri tespit edildi, restore ediliyor:', activeAnalyses);
+            console.log('Active analysis processes detected, restoring:', activeAnalyses);
             
             for (const [sessionKey, analysisInfo] of Object.entries(activeAnalyses)) {
                 if (analysisInfo.type === 'single') {
-                    // Tek cihaz analizi restore et
+                    // Restore single device analysis
                     await restoreSingleDeviceAnalysis(sessionKey, analysisInfo);
                 } else if (analysisInfo.type === 'bulk') {
-                    // Toplu analiz restore et
+                    // Restore bulk analysis
                     await restoreBulkAnalysis(analysisInfo);
                 }
             }
@@ -2300,34 +2301,34 @@ async function restoreActiveAnalyses() {
             showToast(t('active_analysis_restored'), 'info');
         }
     } catch (error) {
-        console.error('Aktif analiz restore hatası:', error);
+        console.error('Active analysis restore error:', error);
     }
 }
 
-// Tek cihaz analizini restore et
+// Restore single device analysis
 async function restoreSingleDeviceAnalysis(ip, analysisInfo) {
-    // device-access.js yüklü mü kontrol et
+    // Check if device-access.js is loaded
     if (typeof showUnifiedAnalysisModal !== 'function') {
-        console.warn('device-access.js yüklenmemiş, analiz restore edilemiyor');
+        console.warn('device-access.js not loaded, analysis cannot be restored');
         return;
     }
     
-    // Modal'ı oluştur ve minimize et
+    // Create and minimize modal
     showUnifiedAnalysisModal(ip, 'single');
     
-    // Kısa bir bekleme sonrası minimize et
+    // Minimize after a short delay
     setTimeout(() => {
         if (typeof minimizeAnalysisModal === 'function') {
             minimizeAnalysisModal(ip);
             
-            // Toaster'da progress göster
+            // Show progress in toaster
             if (typeof updateToasterProgress === 'function') {
                 const progress = analysisInfo.progress || 0;
-                const message = analysisInfo.message || 'Analiz devam ediyor...';
+                const message = analysisInfo.message || 'Analysis in progress...';
                 updateToasterProgress(ip, progress, message);
             }
             
-            // Monitoring'i yeniden başlat
+            // Restart monitoring
             if (typeof monitorSingleDeviceAnalysis === 'function') {
                 monitorSingleDeviceAnalysis(ip);
             }
@@ -2335,30 +2336,30 @@ async function restoreSingleDeviceAnalysis(ip, analysisInfo) {
     }, 500);
 }
 
-// Toplu analizi restore et
+// Restore bulk analysis
 async function restoreBulkAnalysis(analysisInfo) {
-    // device-access.js yüklü mü kontrol et
+    // Check if device-access.js is loaded
     if (typeof showUnifiedAnalysisModal !== 'function') {
-        console.warn('device-access.js yüklenmemiş, bulk analiz restore edilemiyor');
+        console.warn('device-access.js not loaded, bulk analysis cannot be restored');
         return;
     }
     
-    // Modal'ı oluştur ve minimize et
+    // Create and minimize modal
     showUnifiedAnalysisModal(null, 'bulk');
     
-    // Kısa bir bekleme sonrası minimize et
+    // Minimize after a short delay
     setTimeout(() => {
         if (typeof minimizeAnalysisModal === 'function') {
             minimizeAnalysisModal('bulk');
             
-            // Toaster'da progress göster
+            // Show progress in toaster
             if (typeof updateToasterProgress === 'function') {
                 const progress = analysisInfo.progress || 0;
-                const message = analysisInfo.message || 'Toplu analiz devam ediyor...';
+                const message = analysisInfo.message || 'Bulk analysis in progress...';
                 updateToasterProgress('bulk', progress, message);
             }
             
-            // Monitoring'i yeniden başlat
+            // Restart monitoring
             if (typeof monitorBulkAnalysis === 'function') {
                 monitorBulkAnalysis();
             }
@@ -2451,7 +2452,7 @@ async function loadDeviceTypesToEnhancedModal() {
             select.appendChild(option);
         });
     } catch (error) {
-        console.error('Device types yüklenemedi:', error);
+        console.error('Device types could not be loaded:', error);
     }
 }
 
@@ -2476,7 +2477,7 @@ function loadPortsTab() {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="5" class="text-center text-muted" style="padding: 30px;">
-                    Henüz port bulunamadı. "➕ Yeni Port Ekle" ile port ekleyebilirsiniz.
+                    No ports found yet. You can add ports using "➕ Add New Port".
                 </td>
             </tr>
         `;
@@ -2494,7 +2495,7 @@ function createPortTableRow(port) {
         <td>
             ${isManual ? 
                 `<input type="text" class="editable-field" value="${port.service || ''}" onchange="updatePortField(${port.port}, 'service', this.value)">` :
-                `${port.service || 'Bilinmeyen'}`
+                `${port.service || 'Unknown'}`
             }
         </td>
         <td>
@@ -2505,15 +2506,15 @@ function createPortTableRow(port) {
         </td>
         <td>
             <span class="port-type ${isManual ? 'manual' : 'auto'}">
-                ${isManual ? 'Manuel' : 'Otomatik'}
+                ${isManual ? 'Manual' : 'Automatic'}
             </span>
         </td>
         <td>
             <div class="port-actions">
                 ${isManual ? `
-                    <button class="port-btn delete" onclick="deletePortFromTable(${port.port})" title="Sil">🗑️</button>
+                    <button class="port-btn delete" onclick="deletePortFromTable(${port.port})" title="Delete">🗑️</button>
                 ` : `
-                    <button class="port-btn convert" onclick="convertToManualInTable(${port.port})" title="Manuel Moda Geçir">📝</button>
+                    <button class="port-btn convert" onclick="convertToManualInTable(${port.port})" title="Convert to Manual">📝</button>
                 `}
             </div>
         </td>
@@ -2541,18 +2542,18 @@ function addNewPortInline() {
             <input type="number" class="editable-field" placeholder="Port No" min="1" max="65535" id="newPortNumber" required>
         </td>
         <td>
-            <input type="text" class="editable-field" placeholder="Servis adı" id="newPortService">
+            <input type="text" class="editable-field" placeholder="Service name" id="newPortService">
         </td>
         <td>
-            <input type="text" class="editable-field" placeholder="Açıklama" id="newPortDescription">
+            <input type="text" class="editable-field" placeholder="Description" id="newPortDescription">
         </td>
         <td>
-            <span class="port-type manual">Manuel</span>
+            <span class="port-type manual">Manual</span>
         </td>
         <td>
             <div class="port-actions">
-                <button class="port-btn edit" onclick="saveNewPort()" title="Kaydet">💾</button>
-                <button class="port-btn delete" onclick="cancelNewPort()" title="İptal">❌</button>
+                <button class="port-btn edit" onclick="saveNewPort()" title="Save">💾</button>
+                <button class="port-btn delete" onclick="cancelNewPort()" title="Cancel">❌</button>
             </div>
         </td>
     `;
@@ -2641,8 +2642,8 @@ function editPort(portNumber) {
     const port = device.open_ports.find(p => p.port == portNumber);
     if (!port) return;
     
-    const newService = prompt('Servis adı:', port.service || '') || '';
-    const newDescription = prompt('Açıklama:', port.description || '') || '';
+    const newService = prompt('Service name:', port.service || '') || '';
+    const newDescription = prompt('Description:', port.description || '') || '';
     
     port.service = newService;
     port.description = newDescription;
@@ -2712,7 +2713,7 @@ async function loadExistingAccessCredentials() {
             clearAccessFields();
         }
     } catch (error) {
-        console.log('Mevcut erişim bilgileri yüklenemedi:', error);
+        console.log('Existing access credentials could not be loaded:', error);
         clearAccessFields();
     }
 }
@@ -2760,48 +2761,48 @@ function updateEnhancedAccessHints() {
     const hints = {
         'ssh': `
             <div class="hint">
-                <strong>SSH:</strong> Linux/Unix sistemler için. 
-                <br>• Raspberry Pi: kullanıcı <code>pi</code>, port <code>22</code>
-                <br>• Ubuntu/Debian: kullanıcı <code>ubuntu</code> veya <code>admin</code>
-                <br>• Router'lar: kullanıcı <code>admin</code> veya <code>root</code>
+                <strong>SSH:</strong> For Linux/Unix systems. 
+                <br>• Raspberry Pi: user <code>pi</code>, port <code>22</code>
+                <br>• Ubuntu/Debian: user <code>ubuntu</code> or <code>admin</code>
+                <br>• Routers: user <code>admin</code> or <code>root</code>
             </div>
         `,
         'ftp': `
             <div class="hint">
-                <strong>FTP:</strong> Dosya transferi için.
-                <br>• Anonymous erişim: kullanıcı <code>anonymous</code>, şifre boş
-                <br>• NAS cihazları: genellikle <code>admin</code> veya <code>guest</code>
+                <strong>FTP:</strong> For file transfer.
+                <br>• Anonymous access: user <code>anonymous</code>, password empty
+                <br>• NAS devices: usually <code>admin</code> or <code>guest</code>
             </div>
         `,
         'telnet': `
             <div class="hint">
-                <strong>Telnet:</strong> Eski cihazlar ve router'lar için.
-                <br>• Router'lar: <code>admin/admin</code>, <code>root/admin</code>
-                <br>⚠️ Güvenli değil, SSH tercih edin
+                <strong>Telnet:</strong> For older devices and routers.
+                <br>• Routers: <code>admin/admin</code>, <code>root/admin</code>
+                <br>⚠️ Not secure, prefer SSH
             </div>
         `,
         'http': `
             <div class="hint">
-                <strong>HTTP Auth:</strong> Web arayüzü erişimi için.
-                <br>• Router'lar: <code>admin/admin</code>, <code>admin/password</code>
-                <br>• IP Kameralar: <code>admin/admin</code>, <code>admin/123456</code>
-                <br>• IoT Cihazlar: <code>admin</code> veya cihaz modeline özel
+                <strong>HTTP Auth:</strong> For web interface access.
+                <br>• Routers: <code>admin/admin</code>, <code>admin/password</code>
+                <br>• IP Cameras: <code>admin/admin</code>, <code>admin/123456</code>
+                <br>• IoT Devices: <code>admin</code> or device-specific
             </div>
         `,
         'snmp': `
             <div class="hint">
-                <strong>SNMP:</strong> Sistem izleme için.
-                <br>• Community String: genellikle <code>public</code> (kullanıcı adı alanına)
-                <br>• SNMP v3 için kullanıcı adı ve parola gerekli
-                <br>• Port: genellikle <code>161</code>
+                <strong>SNMP:</strong> For system monitoring.
+                <br>• Community String: usually <code>public</code> (in username field)
+                <br>• SNMP v3 requires username and password
+                <br>• Port: usually <code>161</code>
             </div>
         `,
         'api': `
             <div class="hint">
-                <strong>API Token:</strong> REST API erişimi için.
-                <br>• Token'ı Parola alanına girin
-                <br>• Kullanıcı adı genellikle gerekli değil
-                <br>• Ek Bilgiler'e API endpoint'lerini ekleyin
+                <strong>API Token:</strong> For REST API access.
+                <br>• Enter token in Password field
+                <br>• Username usually not required
+                <br>• Add API endpoints in Additional Info
             </div>
         `
     };

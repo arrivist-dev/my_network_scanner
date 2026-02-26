@@ -6,7 +6,7 @@
 let scanHistory = [];
 let deviceTypes = {};
 
-// Sayfa yüklendiğinde verileri getir
+// Fetch data when the page loads
 window.addEventListener('load', function() {
     loadDeviceTypes();
     loadScanHistory();
@@ -17,7 +17,7 @@ async function loadDeviceTypes() {
         const response = await fetch('/api/config/device_types');
         deviceTypes = await response.json();
     } catch (error) {
-        console.error('Cihaz tipleri yüklenirken hata oluştu:', error);
+        console.error('Error occurred while loading device types:', error);
     }
 }
 
@@ -34,7 +34,7 @@ async function loadScanHistory() {
         updateTimeline();
         
     } catch (error) {
-        console.error('Tarihçe yüklenirken hata oluştu:', error);
+        console.error('Error occurred while loading history:', error);
     }
 }
 
@@ -60,14 +60,14 @@ function updateDeviceTypeChart() {
     deviceTypeChart.innerHTML = '';
 
     if (scanHistory.length === 0) {
-        deviceTypeChart.innerHTML = '<p style="text-align: center; color: #6c757d;">Henüz tarama verisi yok</p>';
+        deviceTypeChart.innerHTML = '<p style="text-align: center; color: #6c757d;">No scan data yet</p>';
         return;
     }
 
     const lastScan = scanHistory[scanHistory.length - 1];
     const scanDeviceTypes = lastScan.device_types || {};
 
-    // Pie chart container oluştur
+    // Create pie chart container
     const chartContainer = document.createElement('div');
     chartContainer.className = 'pie-chart-container';
     
@@ -84,7 +84,7 @@ function updateDeviceTypeChart() {
     chartContainer.appendChild(tooltip);
     deviceTypeChart.appendChild(chartContainer);
 
-    // Pie chart oluştur
+    // Create pie chart
     createDeviceTypePieChart(scanDeviceTypes);
 }
 
@@ -94,11 +94,11 @@ function createDeviceTypePieChart(scanDeviceTypes) {
     
     const total = Object.values(scanDeviceTypes).reduce((sum, count) => sum + count, 0);
     if (total === 0) {
-        pieChart.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Veri yok</div>';
+        pieChart.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">No data</div>';
         return;
     }
 
-    // Renk paleti
+    // Color palette
     const colors = [
         '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
         '#43e97b', '#38f9d7', '#ffecd2', '#fcb69f', '#a8edea', '#fed6e3',
@@ -108,13 +108,13 @@ function createDeviceTypePieChart(scanDeviceTypes) {
     let cumulativePercentage = 0;
     let colorIndex = 0;
     
-    // SVG oluştur
+    // Create SVG
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', '250');
     svg.setAttribute('height', '250');
     svg.style.transform = 'rotate(-90deg)';
 
-    // Cihaz tiplerini sayıya göre büyükten küçüğe sırala
+    // Sort device types by count in descending order
     const sortedDeviceTypes = Object.entries(scanDeviceTypes).sort((a, b) => b[1] - a[1]);
     
     sortedDeviceTypes.forEach(([deviceType, count]) => {
@@ -142,7 +142,7 @@ function createDeviceTypePieChart(scanDeviceTypes) {
             circle.style.filter = 'brightness(1.1)';
             
             const icon = getDeviceTypeIcon(deviceType);
-            tooltip.innerHTML = `${icon} <strong>${deviceType}</strong><br>${count} cihaz (${percentage.toFixed(1)}%)`;
+            tooltip.innerHTML = `${icon} <strong>${deviceType}</strong><br>${count} devices (${percentage.toFixed(1)}%)`;
             tooltip.style.display = 'block';
         });
         
@@ -168,12 +168,12 @@ function createDeviceTypePieChart(scanDeviceTypes) {
 }
 
 function getDeviceTypeIcon(deviceTypeName) {
-    // device_types.json'dan icon al
+    // Get icon from device_types.json
     if (deviceTypes[deviceTypeName] && deviceTypes[deviceTypeName].icon) {
         return deviceTypes[deviceTypeName].icon;
     }
     
-    // Fallback iconlar
+    // Fallback icons
     const fallbackIcons = {
         'Unknown': '❓',
         'Router': '🌐',
@@ -199,18 +199,18 @@ function updateVendorChart() {
     vendorChart.innerHTML = '';
 
     if (scanHistory.length === 0) {
-        vendorChart.innerHTML = '<p style="text-align: center; color: #6c757d;">Henüz tarama verisi yok</p>';
+        vendorChart.innerHTML = '<p style="text-align: center; color: #6c757d;">No scan data yet</p>';
         return;
     }
 
     const lastScan = scanHistory[scanHistory.length - 1];
     const vendors = lastScan.vendors || {};
 
-    // Vendor'ları sayıya göre sırala
+    // Sort vendors by count
     const sortedVendors = Object.entries(vendors).sort((a, b) => b[1] - a[1]);
     const maxCount = Math.max(...Object.values(vendors));
 
-    // İlk 15 vendor'ı göster
+    // Show top 15 vendors
     sortedVendors.slice(0, 15).forEach(([vendor, count]) => {
         const vendorItem = document.createElement('div');
         vendorItem.className = 'vendor-item';
@@ -239,26 +239,26 @@ function updateTrendChart() {
     controlsContainer.innerHTML = '';
 
     if (scanHistory.length === 0) {
-        trendChart.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 60px;">Henüz tarama verisi yok</p>';
+        trendChart.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 60px;">No scan data yet</p>';
         return;
     }
 
-    // Son 20 taramayı al
+    // Get the last 20 scans
     const recentHistory = scanHistory.slice(-20);
     
     if (recentHistory.length < 2) {
-        trendChart.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 60px;">Trend göstermek için en az 2 tarama gerekli</p>';
+        trendChart.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 60px;">At least 2 scans are required to show trends</p>';
         return;
     }
 
-    // Metrikler tanımı
+    // Metric definitions
     const metrics = [
-        { key: 'total_devices', label: 'Toplam Cihaz', color: '#667eea', active: true },
-        { key: 'online_devices', label: 'Online Cihaz', color: '#43e97b', active: true },
-        { key: 'scan_duration', label: 'Tarama Süresi (s)', color: '#f5576c', active: false }
+        { key: 'total_devices', label: 'Total Devices', color: '#667eea', active: true },
+        { key: 'online_devices', label: 'Online Devices', color: '#43e97b', active: true },
+        { key: 'scan_duration', label: 'Scan Duration (s)', color: '#f5576c', active: false }
     ];
 
-    // Kontrol butonlarını oluştur
+    // Create control buttons
     metrics.forEach((metric, index) => {
         const toggle = document.createElement('div');
         toggle.className = `metric-toggle ${metric.active ? 'active' : ''}`;
@@ -276,7 +276,7 @@ function updateTrendChart() {
         controlsContainer.appendChild(toggle);
     });
 
-    // Chart'ı çiz
+    // Draw the chart
     drawTrendChart(recentHistory, metrics);
 }
 
@@ -286,7 +286,7 @@ function drawTrendChart(data, metrics) {
     
     trendChart.innerHTML = '';
 
-    // SVG chart oluştur
+    // Create SVG chart
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '380');
@@ -296,26 +296,26 @@ function drawTrendChart(data, metrics) {
     const width = 900 - margin.left - margin.right;
     const height = 380 - margin.top - margin.bottom;
 
-    // Aktif metrikleri al
+    // Get active metrics
     const activeMetrics = metrics.filter(m => m.active);
     
     if (activeMetrics.length === 0) {
-        trendChart.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 60px;">En az bir metrik seçin</p>';
+        trendChart.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 60px;">Select at least one metric</p>';
         return;
     }
 
-    // Her metrik için min/max değerleri hesapla (Y eksenini 0'dan başlat)
+    // Calculate min/max values for each metric (start Y-axis from 0)
     const metricRanges = {};
     activeMetrics.forEach(metric => {
         const values = data.map(scan => scan[metric.key] || 0);
         metricRanges[metric.key] = {
-            min: 0, // Y eksenini 0'dan başlat
+            min: 0, // Start Y-axis from 0
             max: Math.max(...values),
             range: Math.max(...values) || 1
         };
     });
 
-    // Grid çizgileri (sadece ilk metrik için)
+    // Draw grid lines (only for the first metric)
     const primaryMetric = activeMetrics[0];
     const primaryRange = metricRanges[primaryMetric.key];
     
@@ -323,7 +323,7 @@ function drawTrendChart(data, metrics) {
         const y = margin.top + (height * i / 5);
         const value = Math.round(primaryRange.max - (primaryRange.max * i / 5));
         
-        // Yatay grid çizgisi
+        // Horizontal grid line
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', margin.left);
         line.setAttribute('y1', y);
@@ -333,7 +333,7 @@ function drawTrendChart(data, metrics) {
         line.setAttribute('stroke-width', '1');
         svg.appendChild(line);
         
-        // Y ekseni etiketi
+        // Y-axis label
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', margin.left - 10);
         text.setAttribute('y', y + 5);
@@ -344,18 +344,18 @@ function drawTrendChart(data, metrics) {
         svg.appendChild(text);
     }
 
-    // Her aktif metrik için area chart çiz
+    // Draw area chart for each active metric
     activeMetrics.forEach((metric) => {
         const range = metricRanges[metric.key];
         let pathData = '';
         let areaData = '';
         
-        // Başlangıç noktası (sol alt köşe)
+        // Starting point (bottom-left corner)
         const startX = margin.left;
         const baselineY = margin.top + height;
         areaData += `M ${startX} ${baselineY}`;
         
-        // Data noktaları ve path
+        // Data points and path
         data.forEach((scan, index) => {
             const x = margin.left + (width * index / (data.length - 1));
             const normalizedValue = scan[metric.key] / range.range;
@@ -369,7 +369,7 @@ function drawTrendChart(data, metrics) {
                 areaData += ` L ${x} ${y}`;
             }
             
-            // Data noktası
+            // Data point
             const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             circle.setAttribute('cx', x);
             circle.setAttribute('cy', y);
@@ -383,8 +383,8 @@ function drawTrendChart(data, metrics) {
             circle.addEventListener('mouseenter', () => {
                 circle.setAttribute('r', '6');
                 
-                // Tooltip içeriği
-                const date = new Date(scan.timestamp).toLocaleDateString('tr-TR');
+                // Tooltip content
+                const date = new Date(scan.timestamp).toLocaleDateString('en-US');
                 let tooltipHtml = `<div class="tooltip-date">${date}</div>`;
                 
                 activeMetrics.forEach(m => {
@@ -419,11 +419,11 @@ function drawTrendChart(data, metrics) {
             svg.appendChild(circle);
         });
 
-        // Area path'ini kapat (sağ alt köşeye git)
+        // Close the area path (go to bottom-right corner)
         const endX = margin.left + width;
         areaData += ` L ${endX} ${baselineY} Z`;
 
-        // Area (dolgu)
+        // Area (fill)
         const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         area.setAttribute('d', areaData);
         area.setAttribute('fill', metric.color);
@@ -431,7 +431,7 @@ function drawTrendChart(data, metrics) {
         area.setAttribute('stroke', 'none');
         svg.appendChild(area);
 
-        // Çizgi (area'nın üstüne)
+        // Line (on top of the area)
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', pathData);
         path.setAttribute('stroke', metric.color);
@@ -442,7 +442,7 @@ function drawTrendChart(data, metrics) {
         svg.appendChild(path);
     });
 
-    // X ekseni etiketleri
+    // X-axis labels
     data.forEach((scan, index) => {
         if (index % 3 === 0 || index === data.length - 1) {
             const x = margin.left + (width * index / (data.length - 1));
@@ -453,7 +453,7 @@ function drawTrendChart(data, metrics) {
             text.setAttribute('font-size', '10');
             text.setAttribute('fill', '#6c757d');
             text.setAttribute('transform', `rotate(-45, ${x}, ${margin.top + height + 20})`);
-            const date = new Date(scan.timestamp).toLocaleDateString('tr-TR', { 
+            const date = new Date(scan.timestamp).toLocaleDateString('en-US', { 
                 month: 'short', 
                 day: 'numeric',
                 hour: '2-digit',
@@ -464,8 +464,8 @@ function drawTrendChart(data, metrics) {
         }
     });
 
-    // Eksenleri çiz
-    // Y ekseni
+    // Draw axes
+    // Y-axis
     const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     yAxis.setAttribute('x1', margin.left);
     yAxis.setAttribute('y1', margin.top);
@@ -475,7 +475,7 @@ function drawTrendChart(data, metrics) {
     yAxis.setAttribute('stroke-width', '2');
     svg.appendChild(yAxis);
 
-    // X ekseni
+    // X-axis
     const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     xAxis.setAttribute('x1', margin.left);
     xAxis.setAttribute('y1', margin.top + height);
@@ -493,20 +493,20 @@ function updateHistoryTable() {
     historyTableBody.innerHTML = '';
 
     if (scanHistory.length === 0) {
-        historyTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6c757d;">Henüz tarama verisi yok</td></tr>';
+        historyTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6c757d;">No scan data yet</td></tr>';
         return;
     }
 
-    // Son 20 taramayı göster, son tarihten eskiye doğru
+    // Show the last 20 scans, from the most recent to the oldest
     const recentHistory = scanHistory.slice(-20).reverse();
 
     recentHistory.forEach((scan, index) => {
         const date = new Date(scan.timestamp);
-        const formattedDate = date.toLocaleString('tr-TR');
+        const formattedDate = date.toLocaleString('en-US');
         
-        // Trend hesapla (bir önceki tarama ile karşılaştır)
+        // Calculate trend (compare with the previous scan)
         let trendClass = 'trend-stable';
-        let trendText = 'Stabil';
+        let trendText = 'Stable';
         
         if (index < recentHistory.length - 1) {
             const prevScan = recentHistory[index + 1];
@@ -541,21 +541,21 @@ function updateTimeline() {
     scanTimeline.innerHTML = '';
 
     if (scanHistory.length === 0) {
-        scanTimeline.innerHTML = '<p style="text-align: center; color: #6c757d;">Henüz tarama verisi yok</p>';
+        scanTimeline.innerHTML = '<p style="text-align: center; color: #6c757d;">No scan data yet</p>';
         return;
     }
 
-    // Son 10 taramayı timeline'da göster
+    // Show the last 10 scans in the timeline
     const recentHistory = scanHistory.slice(-10).reverse();
 
     recentHistory.forEach(scan => {
         const date = new Date(scan.timestamp);
-        const formattedDate = date.toLocaleString('tr-TR');
+        const formattedDate = date.toLocaleString('en-US');
         
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
         
-        // En çok bulunan cihaz tipi ve vendor
+        // Most common device type and vendor
         const scanDeviceTypes = scan.device_types || {};
         const vendors = scan.vendors || {};
         
@@ -566,13 +566,13 @@ function updateTimeline() {
             <div class="timeline-date">${formattedDate}</div>
             <div class="timeline-content">
                 <div class="timeline-title">
-                    ${scan.total_devices || 0} cihaz bulundu (${scan.online_devices || 0} online)
+                    ${scan.total_devices || 0} devices found (${scan.online_devices || 0} online)
                 </div>
                 <div class="timeline-details">
-                    <strong>IP Aralığı:</strong> ${scan.ip_range || 'N/A'}<br>
-                    <strong>Tarama Süresi:</strong> ${Math.round(scan.scan_duration || 0)} saniye<br>
-                    ${topDeviceType ? `<strong>En Çok Bulunan Tip:</strong> ${topDeviceType[0]} (${topDeviceType[1]} adet)<br>` : ''}
-                    ${topVendor ? `<strong>En Çok Bulunan Marka:</strong> ${topVendor[0]} (${topVendor[1]} adet)` : ''}
+                    <strong>IP Range:</strong> ${scan.ip_range || 'N/A'}<br>
+                    <strong>Scan Duration:</strong> ${Math.round(scan.scan_duration || 0)} seconds<br>
+                    ${topDeviceType ? `<strong>Most Common Type:</strong> ${topDeviceType[0]} (${topDeviceType[1]} units)<br>` : ''}
+                    ${topVendor ? `<strong>Most Common Brand:</strong> ${topVendor[0]} (${topVendor[1]} units)` : ''}
                 </div>
             </div>
         `;
@@ -593,7 +593,7 @@ function exportHistory() {
 }
 
 async function clearHistory() {
-    if (confirm('Tüm tarama geçmişini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+    if (confirm('Are you sure you want to clear all scan history? This action cannot be undone.')) {
         try {
             const response = await fetch('/api/clear_history', {
                 method: 'POST',
@@ -612,15 +612,15 @@ async function clearHistory() {
                 updateTrendChart();
                 updateHistoryTable();
                 updateTimeline();
-                alert('Tarihçe temizlendi!');
+                alert('History cleared!');
             } else {
-                alert('Tarihçe temizlenirken hata oluştu: ' + result.error);
+                alert('Error occurred while clearing history: ' + result.error);
             }
         } catch (error) {
-            alert('Tarihçe temizlenirken hata oluştu: ' + error.message);
+            alert('Error occurred while clearing history: ' + error.message);
         }
     }
 }
 
-// Sayfa 30 saniyede bir otomatik olarak yenilensin
+// Automatically refresh the page every 30 seconds
 setInterval(loadScanHistory, 30000);

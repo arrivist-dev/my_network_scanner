@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <!-- 1. Tarama İşlemleri / Cihaz Arama -->
+        <!-- 1. Scanning Operations / Device Search -->
         <div class="controls">
             <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
                 <div class="control-section" style="flex: 1; min-width: 400px;">
@@ -65,7 +65,7 @@
                         <div class="progress-bar">
                             <div id="progressFill" class="progress-fill"></div>
                         </div>
-                        <div id="progressText" class="progress-text">Hazır</div>
+                        <div id="progressText" class="progress-text">Ready</div>
                     </div>
                 </div>
 
@@ -82,7 +82,7 @@
             </div>
         </div>
 
-        <!-- 2. Stat-numbers Bölümü -->
+        <!-- 2. Stat-numbers Section -->
         <div class="stats-bar">
             <div class="stat-item stat-total">
                 <div class="stat-number" id="totalDevices">0</div>
@@ -105,7 +105,7 @@
                 <div class="tooltip">{{ _('vendors') }}</div>
             </div>
             
-            <!-- View Selector - Dikey Konumlandırma -->
+            <!-- View Selector - Vertical Positioning -->
             <div class="view-controls-stats">
                 <div class="view-selector-vertical">
                     <button id="viewCard" class="view-btn-vertical active" onclick="switchView('card')" title="Card View">
@@ -121,7 +121,7 @@
             </div>
         </div>
 
-        <!-- 3. Filter-panel Bölümü -->
+        <!-- 3. Filter-panel Section -->
         <div class="controls">
             <div class="control-section">
                 <div class="filter-panel">
@@ -170,13 +170,13 @@
             </div>
         </div>
 
-        <!-- 4. Ana İçerik Alanı -->
+        <!-- 4. Main Content Area -->
         <div class="main-content-container">
             <div id="devicesContainer" class="devices-grid">
-                <!-- Cihazlar JavaScript ile yüklenecek -->
+                <!-- Devices will be loaded via JavaScript -->
             </div>
 
-            <!-- Tablo Görünümü (başlangıçta gizli) -->
+            <!-- Table View (initially hidden) -->
             <div id="tableContainer" class="table-container" style="display: none;">
                 <table id="devicesTable" class="devices-table">
                     <thead>
@@ -206,19 +206,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Tablo verileri JavaScript ile yüklenecek -->
+                        <!-- Table data will be loaded by JavaScript -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- Harita Görünümü (başlangıçta gizli) -->
+            <!-- Map View (initially hidden) -->
             <div id="mapContainer" class="map-container" style="display: none;">
                 <div class="map-placeholder">
                     <div class="map-content">
                         <h3>🗺️ Network Map</h3>
-                        <p>Ağ haritası görünümü geliştirme aşamasında...</p>
+                        <p>Network map view is under development...</p>
                         <div class="network-diagram" id="networkDiagram">
-                            <!-- Network diagram buraya gelecek -->
+                            <!-- Network diagram will be placed here -->
                         </div>
                     </div>
                 </div>
@@ -226,7 +226,7 @@
         </div>
     </div>
 
-    <!-- Cihaz Düzenleme Modal -->
+    <!-- Device Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -477,7 +477,7 @@
             </div>
             <div>|</div>
             <div>
-                <a href="https://github.com/fxerkan/my_network_scanner" target="_blank" style="
+                <a href="https://github.com/arrivist-dev/my_network_scanner" target="_blank" style="
                     color: #74b9ff;
                     text-decoration: none;
                     display: inline-flex;
@@ -485,7 +485,7 @@
                     gap: 5px;
                     transition: color 0.3s ease;
                 " onmouseover="this.style.color='#0984e3'" onmouseout="this.style.color='#74b9ff'">
-                    🐙 github.com/fxerkan/my_network_scanner
+                    🐙 github.com/arrivist-dev/my_network_scanner
                 </a>
             </div>
         </div>

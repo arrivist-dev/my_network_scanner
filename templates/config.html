@@ -109,53 +109,53 @@
                 <div class="card">
                     <h3 class="card-title">🏭 OUI (Organizationally Unique Identifier) Database</h3>
                     <p style="margin-bottom: 20px; color: #6c757d;">
-                        MAC adreslerinden üretici firma bilgisi almak için kullanılan OUI database. 
-                        Yeni üreticiler ekleyebilir veya mevcut kayıtları düzenleyebilirsiniz.
+                        OUI database used to get manufacturer information from MAC addresses. 
+                        You can add new manufacturers or edit existing records.
                     </p>
                     
                     <div class="grid">
                         <div>
-                            <h4>🌐 Otomatik Güncelleme</h4>
+                            <h4>🌐 Automatic Update</h4>
                             <div style="margin-bottom: 15px;">
                                 <button class="btn btn-info" onclick="downloadIEEEDatabase()" id="downloadIEEEBtn">
-                                    📥 IEEE OUI Database İndir
+                                    📥 Download IEEE OUI Database
                                 </button>
                                 <p style="font-size: 0.8em; color: #6c757d; margin-top: 5px;">
-                                    IEEE.org'dan güncel OUI veritabanını indirir ve mevcut database ile birleştirir.
+                                    Downloads the latest OUI database from IEEE.org and merges it with the current database.
                                 </p>
                             </div>
                             
-                            <h4>➕ Yeni OUI Ekle</h4>
+                            <h4>➕ Add New OUI</h4>
                             <div class="form-group">
-                                <label class="form-label">OUI (ilk 3 byte, örnek: 001122)</label>
+                                <label class="form-label">OUI (first 3 bytes, e.g.: 001122)</label>
                                 <input type="text" class="form-input" id="newOui" placeholder="001122" maxlength="6">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Üretici Adı</label>
+                                <label class="form-label">Vendor Name</label>
                                 <input type="text" class="form-input" id="newVendor" placeholder="Apple">
                             </div>
                             <div style="display: flex; gap: 10px;">
-                                <button class="btn" onclick="addOuiEntry()">➕ Manuel Ekle</button>
+                                <button class="btn" onclick="addOuiEntry()">➕ Add Manually</button>
                                 <button class="btn btn-warning" onclick="lookupVendorAPI()" id="apiLookupBtn" disabled>
-                                    🔍 API ile Bul
+                                    🔍 Find with API
                                 </button>
                             </div>
                             <p style="font-size: 0.8em; color: #6c757d; margin-top: 5px;">
-                                API ile Bul: Girdiğiniz OUI için otomatik olarak vendor bilgisini online API'lerden getirir.
+                                Find with API: Automatically fetches vendor information for the entered OUI from online APIs.
                             </p>
                         </div>
                         
                         <div>
-                            <h4>📋 Mevcut OUI Kayıtları</h4>
+                            <h4>📋 Existing OUI Records</h4>
                             <div style="margin-bottom: 10px;">
-                                <input type="text" class="form-input" id="ouiSearchInput" placeholder="OUI veya vendor ile ara..." onkeyup="filterOuiList()">
+                                <input type="text" class="form-input" id="ouiSearchInput" placeholder="Search by OUI or vendor..." onkeyup="filterOuiList()">
                             </div>
                             <div class="oui-list" id="ouiList"></div>
                         </div>
                     </div>
                     
                     <div style="margin-top: 20px;">
-                        <button class="btn" onclick="saveOuiDatabase()">💾 OUI Database Kaydet</button>
+                        <button class="btn" onclick="saveOuiDatabase()">💾 Save OUI Database</button>
                         <button class="btn btn-secondary" onclick="exportOuiDatabase()" style="margin-left: 10px;">📤 Export</button>
                         <input type="file" id="ouiImportFile" accept=".json" style="display: none;" onchange="importOuiDatabase()">
                         <button class="btn btn-secondary" onclick="document.getElementById('ouiImportFile').click()" style="margin-left: 10px;">📥 Import</button>

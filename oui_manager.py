@@ -456,23 +456,22 @@ class OUIManager:
         return success
     
     def get_device_types_from_vendor(self, vendor_name):
-        """Vendor ismine göre olası device type'ları döndürür"""
+        """Return possible device types based on vendor name"""
         if not vendor_name:
             return []
         
         vendor_lower = vendor_name.lower()
         possible_types = []
         
-        # Vendor mapping'den kontrol et
         for vendor_key, device_types in self.vendor_device_types.items():
             if vendor_key in vendor_lower:
                 possible_types.extend(device_types)
         
-        # Dublicate'leri temizle ve sırala
+        # Remove duplicates and sort
         return list(set(possible_types))
     
     def get_vendor_with_device_types(self, mac_address):
-        """MAC address için vendor ve olası device type'ları döndürür"""
+        """Return vendor and possible device types for a MAC address"""
         vendor = self.get_vendor(mac_address)
         device_types = self.get_device_types_from_vendor(vendor)
         
@@ -483,8 +482,8 @@ class OUIManager:
         }
     
     def update_oui_database_with_device_types(self):
-        """Mevcut OUI database'i device type bilgileriyle günceller"""
-        print("🔄 OUI database'e device type bilgileri ekleniyor...")
+        """Update the current OUI database with device type information"""
+        print("🔄 Adding device type information to OUI database...")
         
         updated_count = 0
         enhanced_database = {}
@@ -501,19 +500,19 @@ class OUIManager:
             if device_types:
                 updated_count += 1
         
-        # Enhanced database'i kaydet
+        # Save enhanced database
         enhanced_file = os.path.join(self.config_dir, 'enhanced_oui_database.json')
         try:
             with open(enhanced_file, 'w', encoding='utf-8') as f:
                 json.dump(enhanced_database, f, indent=2, ensure_ascii=False)
             
-            print(f"✅ Enhanced OUI database kaydedildi: {enhanced_file}")
-            print(f"📊 {updated_count}/{len(self.oui_database)} entry'de device type bilgisi eklendi")
+            print(f"✅ Enhanced OUI database saved: {enhanced_file}")
+            print(f"📊 Device type information added to {updated_count}/{len(self.oui_database)} entries")
             
             return enhanced_file
             
         except Exception as e:
-            print(f"❌ Enhanced database kaydetme hatası: {e}")
+            print(f"❌ Error saving enhanced database: {e}")
             return None
 
 # Test functionality

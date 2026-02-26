@@ -27,15 +27,15 @@ window.addEventListener('pagehide', function() {
  * Tab Management
  */
 function switchTab(tabName) {
-    // Tab butonlarını güncelle
+    // Update tab buttons
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
     
-    // Tab içeriklerini güncelle
+    // Update tab contents
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.getElementById(tabName).classList.add('active');
     
-    // Seçilen tab'a göre özel yükleme işlemleri
+    // Special loading for selected tab
     if (tabName === 'networks') {
         loadNetworks();
     } else if (tabName === 'docker') {
@@ -82,7 +82,7 @@ async function loadAllSettings() {
         updateDetectionRuleSelects();
 
     } catch (error) {
-        showAlert('Ayarlar yüklenirken hata oluştu: ' + error.message, 'error');
+        showAlert('Error loading settings: ' + error.message, 'error');
     }
 }
 
@@ -105,7 +105,7 @@ function displayGeneralSettings() {
     if (includeOffline) includeOffline.checked = scanSettings.include_offline === true;
     if (defaultPorts) defaultPorts.value = (portSettings.default_ports || []).join(',');
 
-    // Device specific ports - sadece currentDevicePortRules div'ini güncelle
+    // Device specific ports - only update currentDevicePortRules div
     displayDevicePortRules();
 }
 
@@ -136,17 +136,17 @@ function displayOuiDatabase() {
                 </div>
             </div>
             <div style="display: flex; gap: 5px;">
-                <button class="btn btn-warning btn-small" onclick="editOuiEntry('${oui}', '${vendor.replace(/'/g, "\\'")}')" title="Düzenle">✏️</button>
-                <button class="btn btn-danger btn-small" onclick="removeOuiEntry('${oui}')" title="Sil">🗑️</button>
+                <button class="btn btn-warning btn-small" onclick="editOuiEntry('${oui}', '${vendor.replace(/'/g, "\\'")}')" title="Edit">✏️</button>
+                <button class="btn btn-danger btn-small" onclick="removeOuiEntry('${oui}')" title="Delete">🗑️</button>
             </div>
         `;
         ouiList.appendChild(div);
     });
     
-    // Toplam sayısını göster
+    // Show total count
     const totalCount = document.createElement('div');
     totalCount.style.cssText = 'text-align: center; margin-top: 10px; color: #6c757d; font-size: 0.9em;';
-    totalCount.textContent = `Toplam ${sortedOuis.length} OUI kaydı`;
+    totalCount.textContent = `Total ${sortedOuis.length} OUI records`;
     ouiList.appendChild(totalCount);
 }
 
@@ -155,12 +155,12 @@ function addOuiEntry() {
     const vendor = document.getElementById('newVendor').value.trim();
     
     if (!oui || !vendor) {
-        showAlert('OUI ve Vendor alanları boş olamaz!', 'error');
+        showAlert('OUI and Vendor fields cannot be empty!', 'error');
         return;
     }
     
     if (oui.length !== 6) {
-        showAlert('OUI 6 karakter olmalıdır (örnek: 001122)', 'error');
+        showAlert('OUI must be 6 characters (example: 001122)', 'error');
         return;
     }
     
@@ -170,23 +170,23 @@ function addOuiEntry() {
     document.getElementById('newOui').value = '';
     document.getElementById('newVendor').value = '';
     
-    showAlert('OUI kaydı eklendi!');
+    showAlert('OUI record added!');
 }
 
 function removeOuiEntry(oui) {
-    if (confirm(`${oui} kaydını silmek istediğinizden emin misiniz?`)) {
+    if (confirm(`Are you sure you want to delete the record for ${oui}?`)) {
         delete currentOuiDatabase[oui];
         displayOuiDatabase();
-        showAlert('OUI kaydı silindi!');
+        showAlert('OUI record deleted!');
     }
 }
 
 function editOuiEntry(oui, vendor) {
-    const newVendor = prompt(`OUI ${oui} için yeni vendor adı:`, vendor);
+    const newVendor = prompt(`New vendor name for OUI ${oui}:`, vendor);
     if (newVendor && newVendor.trim() !== '' && newVendor !== vendor) {
         currentOuiDatabase[oui] = newVendor.trim();
         displayOuiDatabase();
-        showAlert('OUI kaydı güncellendi!');
+        showAlert('OUI record updated!');
     }
 }
 
@@ -454,7 +454,7 @@ function addHostnamePattern() {
     const deviceType = document.getElementById('newHostnameDeviceType').value;
     
     if (!pattern || !deviceType) {
-        showAlert('Pattern ve cihaz tipi alanları dolu olmalıdır!', 'error');
+        showAlert('Pattern and device type fields must be filled!', 'error');
         return;
     }
     
@@ -473,7 +473,7 @@ function addHostnamePattern() {
     document.getElementById('newHostnamePattern').value = '';
     document.getElementById('newHostnameDeviceType').value = '';
     displayDetectionRules();
-    showAlert('Hostname pattern eklendi!');
+    showAlert('Hostname pattern added!');
 }
 
 function addVendorPattern() {
@@ -481,7 +481,7 @@ function addVendorPattern() {
     const deviceType = document.getElementById('newVendorDeviceType').value;
     
     if (!pattern || !deviceType) {
-        showAlert('Pattern ve cihaz tipi alanları dolu olmalıdır!', 'error');
+        showAlert('Pattern and device type fields must be filled!', 'error');
         return;
     }
     
@@ -500,14 +500,14 @@ function addVendorPattern() {
     document.getElementById('newVendorPattern').value = '';
     document.getElementById('newVendorDeviceType').value = '';
     displayDetectionRules();
-    showAlert('Vendor pattern eklendi!');
+    showAlert('Vendor pattern added!');
 }
 
 function removeHostnamePattern(index) {
     if (currentSettings.detection_rules && currentSettings.detection_rules.hostname_patterns) {
         currentSettings.detection_rules.hostname_patterns.splice(index, 1);
         displayDetectionRules();
-        showAlert('Hostname pattern silindi!');
+        showAlert('Hostname pattern deleted!');
     }
 }
 
@@ -515,7 +515,7 @@ function removeVendorPattern(index) {
     if (currentSettings.detection_rules && currentSettings.detection_rules.vendor_patterns) {
         currentSettings.detection_rules.vendor_patterns.splice(index, 1);
         displayDetectionRules();
-        showAlert('Vendor pattern silindi!');
+        showAlert('Vendor pattern deleted!');
     }
 }
 
@@ -530,13 +530,13 @@ function saveDetectionRules() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showAlert('Tanıma kuralları kaydedildi!');
+            showAlert('Detection rules saved!');
         } else {
-            showAlert('Kaydetme hatası: ' + data.error, 'error');
+            showAlert('Save error: ' + data.error, 'error');
         }
     })
     .catch(error => {
-        showAlert('Kaydetme hatası: ' + error, 'error');
+        showAlert('Save error: ' + error, 'error');
     });
 }
 
@@ -568,7 +568,7 @@ function addDeviceTypePorts() {
     const ports = document.getElementById('deviceTypePorts').value.trim();
     
     if (!deviceType || !ports) {
-        showAlert('Cihaz tipi ve port alanları dolu olmalıdır!', 'error');
+        showAlert('Device type and port fields must be filled!', 'error');
         return;
     }
     
@@ -585,14 +585,14 @@ function addDeviceTypePorts() {
     document.getElementById('deviceTypePortSelect').value = '';
     
     displayDevicePortRules();
-    showAlert('Cihaz tipi port kuralı eklendi!');
+    showAlert('Device type port rule added!');
 }
 
 function removeDevicePortRule(deviceType) {
     if (currentSettings.port_settings?.device_specific_ports) {
         delete currentSettings.port_settings.device_specific_ports[deviceType];
         displayDevicePortRules();
-        showAlert('Port kuralı silindi!');
+        showAlert('Port rule deleted!');
     }
 }
 
@@ -625,13 +625,13 @@ async function loadNetworks() {
         });
         
     } catch (error) {
-        showAlert('Ağ bilgileri yüklenirken hata oluştu: ' + error.message, 'error');
+        showAlert('Error loading network information: ' + error.message, 'error');
     }
 }
 
 function refreshNetworks() {
     loadNetworks();
-    showAlert('Ağ bilgileri yenilendi!');
+    showAlert('Network information refreshed!');
 }
 
 /**
@@ -646,7 +646,7 @@ async function saveGeneralSettings() {
         const defaultPortsEl = document.getElementById('defaultPorts');
         
         if (!defaultIpRangeEl || !timeoutEl || !maxThreadsEl || !includeOfflineEl || !defaultPortsEl) {
-            showAlert('Form elementleri bulunamadı!', 'error');
+            showAlert('Form elements not found!', 'error');
             return;
         }
         
@@ -676,15 +676,15 @@ async function saveGeneralSettings() {
         const result = await response.json();
         
         if (response.ok && result.success) {
-            showAlert('Genel ayarlar kaydedildi!');
+            showAlert('General settings saved!');
             currentSettings = {...currentSettings, ...settingsData};
             await loadAllSettings();
         } else {
-            showAlert('Hata: ' + (result.error || result.message || 'Bilinmeyen hata'), 'error');
+            showAlert('Error: ' + (result.error || result.message || 'Unknown error'), 'error');
         }
         
     } catch (error) {
-        showAlert('Ayarlar kaydedilirken hata oluştu: ' + error.message, 'error');
+        showAlert('Error saving settings: ' + error.message, 'error');
     }
 }
 
@@ -701,13 +701,13 @@ async function saveOuiDatabase() {
         const result = await response.json();
         
         if (response.ok) {
-            showAlert('OUI database kaydedildi!');
+            showAlert('OUI database saved!');
         } else {
-            showAlert('Hata: ' + result.error, 'error');
+            showAlert('Error: ' + result.error, 'error');
         }
         
     } catch (error) {
-        showAlert('OUI database kaydedilirken hata oluştu: ' + error.message, 'error');
+        showAlert('Error saving OUI database: ' + error.message, 'error');
     }
 }
 
@@ -724,13 +724,13 @@ async function saveDeviceTypes() {
         const result = await response.json();
         
         if (response.ok) {
-            showAlert('Cihaz tipleri kaydedildi!');
+            showAlert('Device types saved!');
         } else {
-            showAlert('Hata: ' + result.error, 'error');
+            showAlert('Error: ' + result.error, 'error');
         }
         
     } catch (error) {
-        showAlert('Cihaz tipleri kaydedilirken hata oluştu: ' + error.message, 'error');
+        showAlert('Error saving device types: ' + error.message, 'error');
     }
 }
 
@@ -757,9 +757,9 @@ function importOuiDatabase() {
                 const importedData = JSON.parse(e.target.result);
                 currentOuiDatabase = {...currentOuiDatabase, ...importedData};
                 displayOuiDatabase();
-                showAlert(`${Object.keys(importedData).length} OUI kaydı import edildi!`);
+                showAlert(`${Object.keys(importedData).length} OUI records imported!`);
             } catch (error) {
-                showAlert('Import hatası: Geçersiz JSON dosyası', 'error');
+                showAlert('Import error: Invalid JSON file', 'error');
             }
         };
         reader.readAsText(file);
@@ -774,20 +774,20 @@ async function downloadIEEEDatabase() {
     const originalText = btn.textContent;
     
     btn.disabled = true;
-    btn.textContent = '📥 İndiriliyor...';
+    btn.textContent = '📥 Downloading...';
     
     try {
         const response = await fetch('/api/download_ieee_oui');
         const result = await response.json();
         
         if (result.success) {
-            showAlert(`IEEE OUI database başarıyla güncellendi! ${result.processed_count} kayıt işlendi.`);
+            showAlert(`IEEE OUI database successfully updated! ${result.processed_count} records processed.`);
             loadAllSettings();
         } else {
-            showAlert('IEEE database indirme hatası: ' + result.error, 'error');
+            showAlert('IEEE database download error: ' + result.error, 'error');
         }
     } catch (error) {
-        showAlert('Bağlantı hatası: ' + error.message, 'error');
+        showAlert('Connection error: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -798,7 +798,7 @@ async function lookupVendorAPI() {
     const oui = document.getElementById('newOui').value.trim();
     
     if (!oui || oui.length !== 6) {
-        showAlert('Geçerli bir 6 haneli OUI girin (örnek: 001122)', 'error');
+        showAlert('Enter a valid 6-character OUI (example: 001122)', 'error');
         return;
     }
     
@@ -806,7 +806,7 @@ async function lookupVendorAPI() {
     const originalText = btn.textContent;
     
     btn.disabled = true;
-    btn.textContent = '🔍 Aranıyor...';
+    btn.textContent = '🔍 Searching...';
     
     try {
         const testMac = oui + '123456';
@@ -816,12 +816,12 @@ async function lookupVendorAPI() {
         
         if (result.success) {
             document.getElementById('newVendor').value = result.vendor;
-            showAlert(`Vendor bulundu: ${result.vendor} (Kaynak: ${result.source})`);
+            showAlert(`Vendor found: ${result.vendor} (Source: ${result.source})`);
         } else {
-            showAlert('Vendor bilgisi bulunamadı: ' + result.error, 'error');
+            showAlert('Vendor information not found: ' + result.error, 'error');
         }
     } catch (error) {
-        showAlert('API arama hatası: ' + error.message, 'error');
+        showAlert('API search error: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -838,9 +838,9 @@ function updateDetectionRuleSelects() {
     
     if (!hostnameSelect || !vendorSelect || !devicePortSelect) return;
     
-    hostnameSelect.innerHTML = '<option value="">Cihaz Tipi Seç</option>';
-    vendorSelect.innerHTML = '<option value="">Cihaz Tipi Seç</option>';
-    devicePortSelect.innerHTML = '<option value="">Port tanımı eklemek için cihaz tipi seçin</option>';
+    hostnameSelect.innerHTML = '<option value="">Select Device Type</option>';
+    vendorSelect.innerHTML = '<option value="">Select Device Type</option>';
+    devicePortSelect.innerHTML = '<option value="">Select device type to add port definition</option>';
     
     for (const typeName of Object.keys(currentDeviceTypes)) {
         const option1 = document.createElement('option');
@@ -887,7 +887,7 @@ async function loadDockerInfo() {
             loadDockerScanRanges()
         ]);
     } catch (error) {
-        showAlert('Docker bilgileri yüklenirken hata oluştu: ' + error.message, 'error');
+        showAlert('Error loading Docker information: ' + error.message, 'error');
     }
 }
 
@@ -907,9 +907,9 @@ async function loadDockerStatus() {
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 1.5em;">✅</span>
                         <div>
-                            <strong>Docker Aktif</strong>
+                            <strong>Docker Active</strong>
                             <div style="font-size: 0.9em; opacity: 0.8;">
-                                ${data.networks_count} network, ${data.containers_count} container, ${data.scan_ranges_count} tarama aralığı
+                                ${data.networks_count} network, ${data.containers_count} container, ${data.scan_ranges_count} scan range
                             </div>
                         </div>
                     </div>
@@ -921,11 +921,11 @@ async function loadDockerStatus() {
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">${data.containers_count}</div>
-                        <div class="stat-label">Aktif Containers</div>
+                        <div class="stat-label">Active Containers</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">${data.scan_ranges_count}</div>
-                        <div class="stat-label">Tarama Aralıkları</div>
+                        <div class="stat-label">Scan Ranges</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">${data.socket_available ? '✅' : '❌'}</div>
@@ -939,9 +939,9 @@ async function loadDockerStatus() {
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 1.5em;">❌</span>
                         <div>
-                            <strong>Docker Kullanılamıyor</strong>
+                            <strong>Docker Unavailable</strong>
                             <div style="font-size: 0.9em; opacity: 0.8;">
-                                ${data.error || 'Docker kurulu değil veya çalışmıyor'}
+                                ${data.error || 'Docker is not installed or not running'}
                             </div>
                         </div>
                     </div>
@@ -956,7 +956,7 @@ async function loadDockerStatus() {
         if (statusContainer) {
             statusContainer.innerHTML = `
                 <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 6px;">
-                    ❌ Docker durumu kontrol edilemedi: ${error.message}
+                    ❌ Docker status could not be checked: ${error.message}
                 </div>
             `;
         }
@@ -972,7 +972,7 @@ async function loadDockerNetworks() {
         if (!networksContainer) return;
         
         if (!data.success || !data.networks || data.networks.length === 0) {
-            networksContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">Docker network bulunamadı</div>';
+            networksContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">No Docker networks found</div>';
             return;
         }
         
@@ -998,7 +998,7 @@ async function loadDockerNetworks() {
                             </div>
                             ${network.gateway ? `<div style="font-size: 0.9em; color: #6c757d; margin-bottom: 5px;"><strong>Gateway:</strong> ${network.gateway}</div>` : ''}
                             <div style="font-size: 0.9em; color: #6c757d;">
-                                <strong>Containers:</strong> ${containerCount} adet
+                                <strong>Containers:</strong> ${containerCount} count
                             </div>
                         </div>
                     </div>
@@ -1011,7 +1011,7 @@ async function loadDockerNetworks() {
     } catch (error) {
         const networksContainer = document.getElementById('dockerNetworksList');
         if (networksContainer) {
-            networksContainer.innerHTML = `<div style="color: #dc3545; padding: 20px; text-align: center;">❌ Docker networks yüklenemedi: ${error.message}</div>`;
+            networksContainer.innerHTML = `<div style="color: #dc3545; padding: 20px; text-align: center;">❌ Docker networks could not be loaded: ${error.message}</div>`;
         }
     }
 }
@@ -1025,7 +1025,7 @@ async function loadDockerContainers() {
         if (!containersContainer) return;
         
         if (!data.success || !data.containers || data.containers.length === 0) {
-            containersContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">Çalışan Docker container bulunamadı</div>';
+            containersContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">No running Docker containers found</div>';
             return;
         }
         
@@ -1069,7 +1069,7 @@ async function loadDockerContainers() {
     } catch (error) {
         const containersContainer = document.getElementById('dockerContainersList');
         if (containersContainer) {
-            containersContainer.innerHTML = `<div style="color: #dc3545; padding: 20px; text-align: center;">❌ Docker containers yüklenemedi: ${error.message}</div>`;
+            containersContainer.innerHTML = `<div style="color: #dc3545; padding: 20px; text-align: center;">❌ Docker containers could not be loaded: ${error.message}</div>`;
         }
     }
 }
@@ -1083,7 +1083,7 @@ async function loadDockerScanRanges() {
         if (!scanRangesContainer) return;
         
         if (!data.success || !data.scan_ranges || data.scan_ranges.length === 0) {
-            scanRangesContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">Docker tarama aralığı bulunamadı</div>';
+            scanRangesContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">No Docker scan ranges found</div>';
             return;
         }
         
@@ -1105,12 +1105,12 @@ async function loadDockerScanRanges() {
                             </div>
                             ${range.gateway ? `<div style="font-size: 0.9em; color: #6c757d; margin-bottom: 5px;"><strong>Gateway:</strong> ${range.gateway}</div>` : ''}
                             <div style="font-size: 0.9em; color: #6c757d;">
-                                <strong>Containers:</strong> ${range.container_count} adet
+                                <strong>Containers:</strong> ${range.container_count} count
                             </div>
                         </div>
                         <div>
                             <button class="btn btn-small" onclick="addToScanRange('${range.scan_range}', '${range.network_name}')" style="background: #28a745; color: white;">
-                                ➕ Taramaya Ekle
+                                ➕ Add to Scan
                             </button>
                         </div>
                     </div>
@@ -1123,7 +1123,7 @@ async function loadDockerScanRanges() {
     } catch (error) {
         const scanRangesContainer = document.getElementById('dockerScanRangesList');
         if (scanRangesContainer) {
-            scanRangesContainer.innerHTML = `<div style="color: #dc3545; padding: 20px; text-align: center;">❌ Docker scan ranges yüklenemedi: ${error.message}</div>`;
+            scanRangesContainer.innerHTML = `<div style="color: #dc3545; padding: 20px; text-align: center;">❌ Docker scan ranges could not be loaded: ${error.message}</div>`;
         }
     }
 }
@@ -1132,32 +1132,32 @@ async function loadDockerScanRanges() {
 async function refreshDockerNetworks() {
     const networksContainer = document.getElementById('dockerNetworksList');
     if (networksContainer) {
-        networksContainer.innerHTML = '<div class="loading">Network bilgileri yenileniyor...</div>';
+        networksContainer.innerHTML = '<div class="loading">Refreshing network information...</div>';
     }
     await loadDockerNetworks();
-    showAlert('Docker networks yenilendi!');
+    showAlert('Docker networks refreshed!');
 }
 
 async function refreshDockerContainers() {
     const containersContainer = document.getElementById('dockerContainersList');
     if (containersContainer) {
-        containersContainer.innerHTML = '<div class="loading">Container bilgileri yenileniyor...</div>';
+        containersContainer.innerHTML = '<div class="loading">Refreshing container information...</div>';
     }
     await loadDockerContainers();
-    showAlert('Docker containers yenilendi!');
+    showAlert('Docker containers refreshed!');
 }
 
 async function refreshDockerScanRanges() {
     const scanRangesContainer = document.getElementById('dockerScanRangesList');
     if (scanRangesContainer) {
-        scanRangesContainer.innerHTML = '<div class="loading">Tarama aralıkları yenileniyor...</div>';
+        scanRangesContainer.innerHTML = '<div class="loading">Refreshing scan ranges...</div>';
     }
     await loadDockerScanRanges();
-    showAlert('Docker tarama aralıkları yenilendi!');
+    showAlert('Docker scan ranges refreshed!');
 }
 
 function addToScanRange(subnet, networkName) {
-    // Genel ayarlar sekmesine geç ve IP aralığına ekle
+    // Switch to general settings tab and add to IP range
     switchTab('general');
     
     setTimeout(() => {
@@ -1166,7 +1166,7 @@ function addToScanRange(subnet, networkName) {
             const currentValue = defaultIpRangeInput.value;
             const newValue = currentValue ? `${currentValue},${subnet}` : subnet;
             defaultIpRangeInput.value = newValue;
-            showAlert(`${networkName} network'ü (${subnet}) tarama aralığına eklendi!`);
+            showAlert(`${networkName} network (${subnet}) added to scan range!`);
         }
     }, 100);
 }

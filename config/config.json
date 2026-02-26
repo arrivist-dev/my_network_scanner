@@ -176,7 +176,7 @@
   },
   "smart_naming": {
     "enabled": true,
-    "info": "Smart naming özellikleri artık sadece 'Toplu Detaylı Analiz' butonunda çalışır. Normal tarama hızlıdır.",
+    "info": "Smart naming features now only work with the 'Batch Detailed Analysis' button. Normal scan is fast.",
     "auto_alias": true,
     "hostname_resolution": true,
     "advanced_scanning": true,
